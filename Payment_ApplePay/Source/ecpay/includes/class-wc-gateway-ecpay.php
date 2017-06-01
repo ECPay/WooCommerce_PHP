@@ -168,10 +168,10 @@ class WC_Gateway_Ecpay extends WC_Payment_Gateway {
 				$aio->Send['MerchantTradeNo'] = '';
 				$service_url = '';
 				if ($this->ecpay_test_mode == 'yes') {
-					$service_url = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/v2';
+					$service_url = 'https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut';
 					$aio->Send['MerchantTradeNo'] = date('YmdHis');
 				} else {
-					$service_url = 'https://payment.ecpay.com.tw/Cashier/AioCheckOut/v2';
+					$service_url = 'https://payment.ecpay.com.tw/Cashier/AioCheckOut';
 				}
 				$aio->MerchantID 		= $this->ecpay_merchant_id;
 				$aio->HashKey 			= $this->ecpay_hash_key;
