@@ -135,7 +135,7 @@ function beginPayment() {
 	        var send = {
 			action: "apple_pay_check_out",
 			payment: JSON.stringify(event.payment),
-			order_id: wc_ecpay_apple_pay_params.order_id 
+			order_id: wc_ecpay_apple_pay_params.order_id
 	        };
 
 	        if(wc_ecpay_apple_pay_params.test_mode == 'yes')

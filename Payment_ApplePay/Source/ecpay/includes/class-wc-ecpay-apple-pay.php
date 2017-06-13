@@ -280,6 +280,8 @@ class WC_Ecpay_Apple_Pay extends WC_Gateway_Ecpay {
 				$ecpay_apple_pay->Send['MerchantTradeNo'] = date('YmdHis').$order_id;
 				$aNext_Step['SimulatePaid'] = 0 ;
 
+				$order->add_order_note($sPayment);
+
 			} else {
 				$ecpay_apple_pay->ServiceURL = 'https://payment.ecpay.com.tw/ApplePay/CreateServerOrder/V2';
 				$ecpay_apple_pay->Send['MerchantTradeNo'] = $order_id;
@@ -297,7 +299,7 @@ class WC_Ecpay_Apple_Pay extends WC_Gateway_Ecpay {
 			$ecpay_apple_pay->Send['CurrencyCode'] 		= 'TWD' ;
 			$ecpay_apple_pay->Send['ItemName'] 		= '網路商品一批';
 			$ecpay_apple_pay->Send['PlatformID'] 		= '' ;
-			$ecpay_apple_pay->Send['TradeDesc'] 		= 'wordpress applepay v1.0.10420' ;
+			$ecpay_apple_pay->Send['TradeDesc'] 		= 'wordpress applepay v1.0.10601' ;
 			$ecpay_apple_pay->Send['PaymentToken'] 		= $sPayment ;
 			$ecpay_apple_pay->Send['TradeType'] 		= 2 ;
 
