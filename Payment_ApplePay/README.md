@@ -11,7 +11,7 @@
 
 
 ## 2. 安裝環境
-  - wordpress 4.7.3+ woocommerce 2.6.14
+  - WooCommerce 2.6.0~2.6.14 WordPress 4.5.3 / 4.6.1 / 4.7.3
  
 
 ## 3. 教學文件
