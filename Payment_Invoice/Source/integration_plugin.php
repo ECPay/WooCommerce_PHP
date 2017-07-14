@@ -13,14 +13,16 @@
 	 */
 
 	add_action('plugins_loaded', 'ecpay_integration_plugin_init', 0);
-	
-	function ecpay_integration_plugin_init() {
-    # Make sure WooCommerce is setted.
-    if (!class_exists('WC_Payment_Gateway')) {
-        return;
-    }
+	add_action('wp_footer', 'ecpay_integration_plugin_init_payment_method'); 
 
-    class WC_Gateway_ECPay extends WC_Payment_Gateway {
+	function ecpay_integration_plugin_init() {
+
+	    # Make sure WooCommerce is setted.
+	    if (!class_exists('WC_Payment_Gateway')) {
+	        return;
+	    }
+
+	    class WC_Gateway_ECPay extends WC_Payment_Gateway {
 			var $ecpay_test_mode;
 			var $ecpay_merchant_id;
 			var $ecpay_hash_key;
@@ -309,7 +311,7 @@
 							$cart_order_id = substr($ecpay_feedback['MerchantTradeNo'], 14);
 						}
 						
-	
+
 
 						# Get the cart order amount
 						$order = new WC_Order($cart_order_id);
@@ -499,8 +501,8 @@
 			 * @return boolean  is the order complete
 			 */
 			private function is_order_complete($order) {
-                		$status = '';
-                		$status = (method_exists($Order,'get_status') == true )? $order->get_status(): $order->status;
+	            		$status = '';
+	            		$status = (method_exists($Order,'get_status') == true )? $order->get_status(): $order->status;
 
 				if ($status == 'pending') {
 					return false;
@@ -575,27 +577,138 @@
 						do_action('ecpay_auto_invoice', $order->id);
 					}
 
-/*
+	/*
 					require_once( plugin_dir_path( __DIR__ ).'/ecpay_invoice/woocommerce-ecpayinvoice.php' );
 					$GLOBALS['wc_ecpayinvoice'] = wc_ecpayinvoice();
-*/
+	*/
 				}
+			}
+	    }
 
-				
+	    /**
+	     * Add the Gateway Plugin to WooCommerce
+	     * */
+	    function woocommerce_add_ecpay_plugin($methods) {
+	        $methods[] = 'WC_Gateway_ECPay';
+	        return $methods;
+	    }
 
+	    add_filter('woocommerce_payment_gateways', 'woocommerce_add_ecpay_plugin');
+	}
+	
+	function ecpay_integration_plugin_init_payment_method()
+	{
+		?>
+		<script>
+			(function(){
+                if (
+                    document.getElementById("shipping_option") !== null && 
+                    typeof document.getElementById("shipping_option") !== "undefined"
+                ) {
+                    if (window.addEventListener) {
+				        window.addEventListener('DOMContentLoaded', initPaymentMethod, false);
+				    } else {
+				        window.attachEvent('onload', initPaymentMethod);
+				    }
+                }
+			})();
+			function initPaymentMethod() {
+			    var e = document.getElementById("shipping_option");
+			    var shipping = e.options[e.selectedIndex].value;
+			    var payment = document.getElementsByName('payment_method');
+			    
+			    if (
+                    shipping == "HILIFE_Collection" ||
+                    shipping == "FAMI_Collection" ||
+                    shipping == "UNIMART_Collection"
+                ) {
+                    var i;
+                   
+                    for (i = 0; i< payment.length; i++) {
+                        if (payment[i].id != 'payment_method_ecpay_shipping_pay') {
+                            payment[i].style.display="none";
+
+                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+                            if (checkclass == 0) {
+                                var x = document.getElementsByClassName(payment[i].id);
+                                x[0].style.display = "none";
+                            } else {
+                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+                                x[0].style.display = "none";
+                            }
+                        } else {
+                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+                            if (checkclass == 0) {
+                                var x = document.getElementsByClassName(payment[i].id);
+                                x[0].style.display = "";
+                            } else {
+                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+                                x[0].style.display = "";
+                            }
+                        }
+                    }
+	                document.getElementById('payment_method_ecpay').checked = false;
+                    document.getElementById('payment_method_ecpay_shipping_pay').checked = true;
+                    document.getElementById('payment_method_ecpay_shipping_pay').style.display = '';
+                } else {
+                    var i;
+                    for (i = 0; i< payment.length; i++) {
+                        if (payment[i].id != 'payment_method_ecpay_shipping_pay') {
+                            payment[i].style.display=""; 
+
+                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+                            if (checkclass == 0) {
+                                var x = document.getElementsByClassName(payment[i].id);
+                                x[0].style.display = "";
+                            } else {
+                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+                                x[0].style.display = "";
+                            }
+                        } else {
+                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+                            if (checkclass == 0) {
+                                var x = document.getElementsByClassName(payment[i].id);
+                                x[0].style.display = "none";
+                            } else {
+                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+                                x[0].style.display = "none";
+                            }
+
+	                        document.getElementById('payment_method_ecpay').checked = true;
+                            document.getElementById('payment_method_ecpay_shipping_pay').checked = false;
+                            document.getElementById('payment_method_ecpay_shipping_pay').style.display = "none";
+                        }
+                    }
+                }
+			}
+		</script>
+		<?php
+	}
+
+	add_filter('woocommerce_update_order_review_fragments', 'checkout_payment_method', 10, 1);
+
+	function checkout_payment_method($value)
+	{
+		$ecpayShippingType = [
+			'FAMI_Collection',
+			'UNIMART_Collection' ,
+			'HILIFE_Collection',
+		];
+		if (!empty($_SESSION['ecpayShippingType'])) {
+			if (in_array($_SESSION['ecpayShippingType'], $ecpayShippingType)) {
+				$paymentMethod = '<li class="wc_payment_method payment_method_ecpay">';
+			} else {
+				$paymentMethod = '<li class="wc_payment_method payment_method_ecpay_shipping_pay">';
 			}
 			
-    }
+			$hide = ' style="display: none;"';
+			$value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
+		}
 
-    /**
-     * Add the Gateway Plugin to WooCommerce
-     * */
-    function woocommerce_add_ecpay_plugin($methods) {
-        $methods[] = 'WC_Gateway_ECPay';
-				
-        return $methods;
-    }
-
-    add_filter('woocommerce_payment_gateways', 'woocommerce_add_ecpay_plugin');
+		return $value;
 	}
 ?>
