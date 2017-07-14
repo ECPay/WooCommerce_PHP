@@ -59,6 +59,8 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 			add_action( 'admin_notices', array( $this, 'admin_notices' ), 15 );
 			add_action( 'plugins_loaded', array( $this, 'init' ) );
 
+			add_action('wp_footer', array( $this, 'ecpay_integration_plugin_init_payment_method' ) ); 
+			add_filter('woocommerce_update_order_review_fragments', array( $this, 'checkout_payment_method' ), 10, 1);
 		}
 
 
@@ -160,7 +162,6 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 			add_filter( 'woocommerce_payment_gateways', array( $this, 'add_gateways' ) );
 		}
 
-
 		/**
 		 * Add the gateways to WooCommerce
 		 */
@@ -169,11 +170,120 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 			return $methods;
 		}
 
+		public function ecpay_integration_plugin_init_payment_method() {
+			?>
+			<script>
+				(function(){
+	                if (
+	                    document.getElementById("shipping_option") !== null && 
+	                    typeof document.getElementById("shipping_option") !== "undefined"
+	                ) {
+	                    if (window.addEventListener) {
+					        window.addEventListener('DOMContentLoaded', initPaymentMethod, false);
+					    } else {
+					        window.attachEvent('onload', initPaymentMethod);
+					    }
+	                }
+				})();
+				function initPaymentMethod() {
+				    var e = document.getElementById("shipping_option");
+				    var shipping = e.options[e.selectedIndex].value;
+				    var payment = document.getElementsByName('payment_method');
+				    
+				    if (
+	                    shipping == "HILIFE_Collection" ||
+	                    shipping == "FAMI_Collection" ||
+	                    shipping == "UNIMART_Collection"
+	                ) {
+	                    var i;
+	                   
+	                    for (i = 0; i< payment.length; i++) {
+	                        if (payment[i].id != 'payment_method_ecpay_shipping_pay') {
+	                            payment[i].style.display="none";
 
+	                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+	                            if (checkclass == 0) {
+	                                var x = document.getElementsByClassName(payment[i].id);
+	                                x[0].style.display = "none";
+	                            } else {
+	                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+	                                x[0].style.display = "none";
+	                            }
+	                        } else {
+	                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+	                            if (checkclass == 0) {
+	                                var x = document.getElementsByClassName(payment[i].id);
+	                                x[0].style.display = "";
+	                            } else {
+	                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+	                                x[0].style.display = "";
+	                            }
+	                        }
+	                    }
+	                    document.getElementById('payment_method_ecpay').checked = false;
+	                    document.getElementById('payment_method_ecpay_shipping_pay').checked = true;
+	                    document.getElementById('payment_method_ecpay_shipping_pay').style.display = '';
+	                } else {
+	                    var i;
+	                    for (i = 0; i< payment.length; i++) {
+	                        if (payment[i].id != 'payment_method_ecpay_shipping_pay') {
+	                            payment[i].style.display=""; 
+
+	                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+	                            if (checkclass == 0) {
+	                                var x = document.getElementsByClassName(payment[i].id);
+	                                x[0].style.display = "";
+	                            } else {
+	                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+	                                x[0].style.display = "";
+	                            }
+	                        } else {
+	                            checkclass = document.getElementsByClassName("wc_payment_method " + payment[i].id).length;
+
+	                            if (checkclass == 0) {
+	                                var x = document.getElementsByClassName(payment[i].id);
+	                                x[0].style.display = "none";
+	                            } else {
+	                                var x = document.getElementsByClassName("wc_payment_method " + payment[i].id);
+	                                x[0].style.display = "none";
+	                            }
+
+	                            document.getElementById('payment_method_ecpay').checked = true;
+	                            document.getElementById('payment_method_ecpay_shipping_pay').checked = false;
+	                            document.getElementById('payment_method_ecpay_shipping_pay').style.display = "none";
+	                        }
+	                    }
+	                }
+				}
+			</script>
+			<?php
+		}
+
+		public function checkout_payment_method($value) {
+			$ecpayShippingType = [
+				'FAMI_Collection',
+				'UNIMART_Collection' ,
+				'HILIFE_Collection',
+			];
+			if (!empty($_SESSION['ecpayShippingType'])) {
+				if (in_array($_SESSION['ecpayShippingType'], $ecpayShippingType)) {
+					$paymentMethod = '<li class="wc_payment_method payment_method_ecpay">';
+				} else {
+					$paymentMethod = '<li class="wc_payment_method payment_method_ecpay_shipping_pay">';
+				}
+				
+				$hide = ' style="display: none;"';
+				$value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
+			}
+
+			return $value;
+		}
 	}
 
 	$GLOBALS['wc_ecpay_payment'] = WC_Ecpay_Payment::get_instance();
-
 }
 
 
