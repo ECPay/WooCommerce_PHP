@@ -747,11 +747,8 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                     if (document.getElementById('shipping_option').value == "------") { 
                                         alert('請選擇物流方式'); return false;
                                     }
-                                    if (confirm('提醒您，因使用FB及LINE APP內建瀏覽器進行操作時會發生網頁空白的問題，建議您可先複製商品連結後使用其他瀏覽器重新購買。')) {
-                                        document.getElementById("ECPayForm").submit();
-                                    } else {
-                                        return false;
-                                    }
+                                    
+                                    document.getElementById("ECPayForm").submit();
                                 };
                             }
 
@@ -891,14 +888,13 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                     typeof document.getElementById("CVSStoreID") !== "undefined"
                                 ) {
                                     document.getElementById('CVSStoreID').style.display = 'none';
+                                    document.getElementById('purchaserStore').readOnly = true;
+                                    document.getElementById('purchaserAddress').readOnly = true;
+                                    document.getElementById('purchaserPhone').readOnly = true;
                                 }
                             })();
                         </script>
                     <?php
-                    }
-
-                    if ($chosen_method[0]!='ecpay_shipping') {
-                        add_filter( 'woocommerce_available_payment_gateways', "filter_gateways" );
                     }
                 }
                 catch(Exception $e)
@@ -907,16 +903,6 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 }
             }
 
-            function filter_gateways( $gateways )
-            {
-                foreach ($gateways as $key => $value) {
-                    if($key == "ecpay_shipping_pay") {
-                        unset($gateways[$key]);
-                    }
-                }
-                return $gateways;
-            }
-            
             function wcso_field_update_shipping_order_meta( $order_id, $posted ) {
                 global $woocommerce;
                 if (is_array($posted['shipping_method']) && in_array($this->id, $posted['shipping_method'])) {
