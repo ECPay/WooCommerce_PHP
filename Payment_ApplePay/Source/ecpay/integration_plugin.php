@@ -263,20 +263,33 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 		}
 
 		public function checkout_payment_method($value) {
+			$availableGateways = WC()->payment_gateways->get_available_payment_gateways();
+			if (is_array($availableGateways)) {
+				$paymentGateways = array_keys($availableGateways);
+			}
+
 			$ecpayShippingType = [
 				'FAMI_Collection',
 				'UNIMART_Collection' ,
 				'HILIFE_Collection',
 			];
+
 			if (!empty($_SESSION['ecpayShippingType'])) {
+				$paymentMethods = array();
 				if (in_array($_SESSION['ecpayShippingType'], $ecpayShippingType)) {
-					$paymentMethod = '<li class="wc_payment_method payment_method_ecpay">';
+					foreach ($paymentGateways as $key => $gateway) {
+						if ($gateway !== 'ecpay_shipping_pay') {
+							array_push($paymentMethods, '<li class="wc_payment_method payment_method_' . $gateway . '">');
+						}
+					}
 				} else {
-					$paymentMethod = '<li class="wc_payment_method payment_method_ecpay_shipping_pay">';
+					array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
 				}
 				
 				$hide = ' style="display: none;"';
-				$value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
+				foreach ($paymentMethods as $key => $paymentMethod) {
+					$value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
+				}
 			}
 
 			return $value;
