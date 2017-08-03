@@ -16,11 +16,11 @@ require_once 'ECPay.Logistics.Integration.php';
 
 
 if (!class_exists('EcPay_Shipping_Options')) {
-    
+
     function EcPay_Shipping_Options_init() {
-    
+
         class EcPay_Shipping_Options extends WC_Shipping_Method {
-      
+
             public $MerchantID;
             public $HashKey;
             public $HashIV;
@@ -43,13 +43,19 @@ if (!class_exists('EcPay_Shipping_Options')) {
                         )
                     );
 
+            private static $paymentFormMethods = [
+                        'FAMIC2C'       => 'PrintFamilyC2CBill',
+                        'UNIMARTC2C'    => 'PrintUnimartC2CBill',
+                        'HILIFEC2C'     => 'PrintHiLifeC2CBill',
+                    ];
+
             public $SenderName;
             public $SenderPhone;
             public $ecpaylogistic_min_amount;
             public $ecpaylogistic_max_amount;
             public $cartAmount;
 
-            public function __construct() 
+            public function __construct()
             {
                 global $woocommerce;
 
@@ -73,8 +79,8 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                 $this->init();
 
-                // add the action 
-                add_action( 'woocommerce_admin_order_data_after_order_details', array(&$this,'action_woocommerce_admin_order_data_after_shipping_address' ));  
+                // add the action
+                add_action( 'woocommerce_admin_order_data_after_order_details', array(&$this,'action_woocommerce_admin_order_data_after_shipping_address' ));
             }
 
             /**
@@ -107,12 +113,12 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $this->SenderCellPhone = $this->get_option('sender_cell_phone');
                 $this->ecpaylogistic_min_amount = $this->get_option('ecpaylogistic_min_amount');
                 $this->ecpaylogistic_max_amount = $this->get_option('ecpaylogistic_max_amount');
-                $this->orderStatus  = $this->get_option('ecpaylogistic_order_status'); 
+                $this->orderStatus  = $this->get_option('ecpaylogistic_order_status');
                 $this->ecpaylogistic_free_shipping_amount = $this->get_option('ecpaylogistic_free_shipping_amount' );
                 //$this->cartAmount   = $woocommerce->cart->cart_contents_total ;
 
                 $this->get_shipping_options();
-                
+
                 add_filter('woocommerce_shipping_methods', array(&$this, 'add_wcso_shipping_methods'));
                 add_action('woocommerce_cart_totals_after_shipping', array(&$this, 'wcso_review_order_shipping_options'));
                 add_action('woocommerce_review_order_after_shipping', array(&$this, 'wcso_review_order_shipping_options'));
@@ -126,9 +132,9 @@ if (!class_exists('EcPay_Shipping_Options')) {
             }
 
 
-            public function register_status() 
+            public function register_status()
             {
-                register_post_status('wc-ecpay', 
+                register_post_status('wc-ecpay',
                                         array(
                                         'label'                  => '已出貨',
                                         'public'                 => true,
@@ -136,12 +142,12 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                         'show_in_admin_all_list'    => true,
                                         'show_in_admin_status_list' => true,
                                         'label_count'               => _n_noop( $this->orderStatus.' <span class="count">(%s)</span>', $this->orderStatus.'商品已出貨<span class="count">(%s)</span>' )
-                                    ) 
+                                    )
                 );
             }
-       
+
             //custom order status
-            public function add_statuses( $order_statuses  ) 
+            public function add_statuses( $order_statuses  )
             {
                 $new_order_statuses = array();
                 // add new order status after processing
@@ -149,14 +155,23 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     $new_order_statuses[ $key ] = $status;
                 }
                 $new_order_statuses['wc-ecpay'] = $this->orderStatus;
-               
+
                 return $new_order_statuses;
             }
 
+            private function addPaymentFormFileds($orderInfo, $AL)
+            {
+                $fields = ['AllPayLogisticsID', 'CVSPaymentNo', 'CVSValidationNo'];
+                foreach ($fields as $field) {
+                    if (isset($orderInfo["_{$field}"])) {
+                        $AL->Send[$field] = $orderInfo["_{$field}"][0];
+                    }
+                }
+            }
 
             # 訂單詳細頁面的產生物流單按鈕
             function action_woocommerce_admin_order_data_after_shipping_address()
-            { 
+            {
                 try {
                     global $woocommerce, $post;
 
@@ -164,7 +179,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                     //訂單資訊
                     $orderInfo = get_post_meta($post->ID);
-                                 
+
                     //物流子類型
                     $subType = "";
                     if (array_key_exists('ecPay_shipping', $orderInfo) && $this->category =="B2C") {
@@ -189,18 +204,21 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                     if (array_key_exists($orderInfo['ecPay_shipping'][0], $shippingMethod)) {
                         $subType = $shippingMethod[$orderInfo['ecPay_shipping'][0]];
+                        if (isset(self::$paymentFormMethods[$subType])) {
+                            $paymentFormMethod = self::$paymentFormMethods[$subType];
+                        }
                     }
 
                     //是否代收貨款
                     $IsCollection = "N";
                     if (
-                        $orderInfo['ecPay_shipping'][0] == "HILIFE_Collection" || 
-                        $orderInfo['ecPay_shipping'][0] == "FAMI_Collection" || 
+                        $orderInfo['ecPay_shipping'][0] == "HILIFE_Collection" ||
+                        $orderInfo['ecPay_shipping'][0] == "FAMI_Collection" ||
                         $orderInfo['ecPay_shipping'][0]=="UNIMART_Collection"
                     ) {
                         $IsCollection = "Y";
                     }
-                                 
+
                     $orderObj = new WC_Order($post->ID);
                     $itemsInfo = $orderObj->get_items();
 
@@ -210,11 +228,11 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     foreach ($itemsInfo as $key => $value) {
                         $items[] = $value['name'];
                     }
-                    
+
                     //訂單金額
                     $temp = explode('.', $orderInfo['_order_total'][0]);
                     $totalPrice = $temp[0];
-                    
+
                     $AL = new EcpayLogistics();
                     $AL->HashKey = $this->HashKey;
                     $AL->HashIV  = $this->HashIV;
@@ -241,17 +259,26 @@ if (!class_exists('EcPay_Shipping_Options')) {
                         'Remark'               => $orderObj->customer_message,
                         'PlatformID'           => ''
                     );
-                    
+
+                    $this->addPaymentFormFileds($orderInfo, $AL);
                     $AL->SendExtend = array(
                         'ReceiverStoreID' => (array_key_exists('_billing_CVSStoreID', $orderInfo)) ? $orderInfo['_billing_CVSStoreID'][0] : $orderInfo['_CVSStoreID'][0],
                         'ReturnStoreID'   => (array_key_exists('_billing_CVSStoreID', $orderInfo)) ? $orderInfo['_billing_CVSStoreID'][0] : $orderInfo['_CVSStoreID'][0]
                     );
 
-                    //狀態為完成or已出貨，後台隱藏建立物流單按鈕                        
-                    if($orderObj->post_status != 'wc-ecpay' && $orderObj->post_status != 'wc-completed') {
-                        $html = $AL->CreateShippingOrder('物流訂單建立','Map');
-                        echo "</form>".$html;
-                        echo "<input class='button' type='button' value='建立物流訂單' onclick='create();'> ";
+                    //狀態為完成or已出貨，後台隱藏建立物流單按鈕
+                    if ($orderObj->post_status != 'wc-ecpay' && $orderObj->post_status != 'wc-completed') {
+                        echo '</form>';
+
+                        if (isset($orderInfo['_AllPayLogisticsID'], $paymentFormMethod) and method_exists($AL, $paymentFormMethod)
+                                ) {
+
+                            echo '<div style="display:none">', $AL->$paymentFormMethod() , '</div>';
+                            echo "<input class='button' type='button' value='列印繳款單' onclick='paymentForm();'> ";
+                        } else {
+                            echo '<div style="display:none">', $AL->CreateShippingOrder('物流訂單建立','Map') , '</div>';
+                            echo "<input class='button' type='button' value='建立物流訂單' onclick='create();'> ";
+                        }
                     ?>
                         <form id="ecpayChangeStoreForm" method="post" target="ecpay" action="https://logistics.ecpay.com.tw/Express/map" style="display:none">
                             <input type="hidden" id="MerchantID" name="MerchantID" value="<?php echo $this->MerchantID?>" /><br />
@@ -269,7 +296,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 }catch(Exception $e){
                     echo $e->getMessage();
                 }
-                    
+
                 ?>
                 <script type="text/javascript">
                     function create(){
@@ -286,6 +313,9 @@ if (!class_exists('EcPay_Shipping_Options')) {
                         if (map) {
                             changeStore.submit();
                         }
+                    }
+                    function paymentForm(){
+                        document.getElementById('ECPayForm').submit();
                     }
 
                     (function(){
@@ -321,7 +351,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 );
 
                 return $fields;
-            } 
+            }
 
 
             /**
@@ -477,17 +507,17 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     ),
                     'shipping_options_table' => array(
                         'type' => 'shipping_options_table'
-                    )                
+                    )
                 );
             }
-            
+
             /**
             * admin_options function.
             *
             * @access public
             * @return void
             */
-           function admin_options() 
+           function admin_options()
            {
             ?>
                 <h3><?php echo $this->method_title; ?></h3>
@@ -497,7 +527,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 </table>
             <?php
            }
-           
+
            /**
              * is_available function.
              *
@@ -508,7 +538,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
             function is_available($package) {
 
                 global $woocommerce;
-               
+
                 if(( $woocommerce->cart->cart_contents_total < $this->ecpaylogistic_min_amount) || ( $woocommerce->cart->cart_contents_total > $this->ecpaylogistic_max_amount))return false;
 
                 //if($total > 100) return false;
@@ -587,7 +617,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
             function clean($code) {
                 return str_replace('-', '', sanitize_title($code)) . ( strstr($code, '*') ? '*' : '' );
             }
-            
+
             /**
             * validate_shipping_options_table_field function.
             *
@@ -598,7 +628,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
             function validate_shipping_options_table_field( $key ) {
                 return false;
             }
-            
+
             /**
              * generate_options_table_html function.
              *
@@ -606,7 +636,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
              * @return string
              */
             function generate_shipping_options_table_html() {
-                
+
                 ob_start();
                 ?>
                     <tr valign="top">
@@ -628,7 +658,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 <?php
                 return ob_get_clean();
             }
-            
+
             /**
              * process_shipping_options function.
              *
@@ -636,12 +666,12 @@ if (!class_exists('EcPay_Shipping_Options')) {
              * @return void
              */
             function process_shipping_options() {
-                
+
                 $options = array();
                 foreach ($this->EcPay_Logistics[$this->category] as $key => $value) {
-                    if(array_key_exists($key, $_POST)) $options[] = $key ;    
+                    if(array_key_exists($key, $_POST)) $options[] = $key ;
                 }
-                
+
                 update_option($this->id, $options);
                 $this->get_shipping_options();
             }
@@ -655,7 +685,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
             function get_shipping_options() {
                 $this->shipping_options = array_filter( (array) get_option( $this->id ) );
             }
-           
+
             //前台購物車顯示option
             function wcso_review_order_shipping_options() {
                 global $woocommerce;
@@ -700,7 +730,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                             } else {
                                 $subType = $shippingMethod['UNIMART'];
                             }
-                            
+
                             $cvsObj = new EcpayLogistics();
                             $cvsObj->Send = array(
                                                 'MerchantID' => $this->MerchantID,
@@ -713,8 +743,10 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                             );
 
                             // CvsMap(Button 名稱, Form target)
-                            $html = $cvsObj->CvsMap('電子地圖', '_self');
+                            $html = $cvsObj->CvsMap('選取門市', '_self');
+
                             $options = '<option>------</option>';
+
                             foreach ($this->shipping_options as $option) {
                                 $selected = ($_SESSION['ecpayShippingType'] == esc_attr($option)) ? 'selected' : '';
                                 $options .= '<option value="' . esc_attr($option) . '" ' . $selected . '>' . $shipping_name[$option] . '</option>';
@@ -740,20 +772,20 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     ?>
                         <script>
                             if (
-                                document.getElementById("__paymentButton") !== null && 
+                                document.getElementById("__paymentButton") !== null &&
                                 typeof document.getElementById("__paymentButton") !== "undefined"
                             ) {
                                 document.getElementById("__paymentButton").onclick = function() {
-                                    if (document.getElementById('shipping_option').value == "------") { 
+                                    if (document.getElementById('shipping_option').value == "------") {
                                         alert('請選擇物流方式'); return false;
                                     }
-                                    
+
                                     document.getElementById("ECPayForm").submit();
                                 };
                             }
 
                             if (
-                                document.getElementById("shipping_option") !== null && 
+                                document.getElementById("shipping_option") !== null &&
                                 typeof document.getElementById("shipping_option") !== "undefined"
                             ) {
                                 document.getElementById("shipping_option").onchange = function() {
@@ -795,12 +827,12 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                     }
 
                                     if (
-                                        shipping == "HILIFE_Collection" || 
-                                        shipping == "FAMI_Collection" || 
+                                        shipping == "HILIFE_Collection" ||
+                                        shipping == "FAMI_Collection" ||
                                         shipping == "UNIMART_Collection"
                                     ) {
                                         var i;
-                                       
+
                                         for (i = 0; i< payment.length; i++) {
                                             if(payment[i].id != 'payment_method_ecpay_shipping_pay')
                                             {
@@ -811,7 +843,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                                 if(checkclass == 0)
                                                 {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "none";  
+                                                    x[0].style.display = "none";
                                                 }
                                                 else
                                                 {
@@ -826,7 +858,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                                 if(checkclass == 0)
                                                 {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "";  
+                                                    x[0].style.display = "";
                                                 }
                                                 else
                                                 {
@@ -843,21 +875,21 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                         for (i = 0; i< payment.length; i++) {
                                             if(payment[i].id != 'payment_method_ecpay_shipping_pay')
                                             {
-                                                payment[i].style.display=""; 
+                                                payment[i].style.display="";
 
                                                 checkclass = document.getElementsByClassName("wc_payment_method "+payment[i].id).length;
 
                                                 if(checkclass == 0)
                                                 {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "";  
+                                                    x[0].style.display = "";
                                                 }
                                                 else
                                                 {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "";
                                                 }
-                                            } 
+                                            }
                                             else
                                             {
                                                 checkclass = document.getElementsByClassName("wc_payment_method "+payment[i].id).length;
@@ -865,7 +897,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                                 if(checkclass == 0)
                                                 {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "none";  
+                                                    x[0].style.display = "none";
                                                 }
                                                 else
                                                 {
@@ -884,7 +916,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                             (function(){
                                 if (
-                                    document.getElementById("CVSStoreID") !== null && 
+                                    document.getElementById("CVSStoreID") !== null &&
                                     typeof document.getElementById("CVSStoreID") !== "undefined"
                                 ) {
                                     document.getElementById('CVSStoreID').style.display = 'none';
@@ -918,29 +950,29 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     }
                 }
             }
-          
+
             function wcso_display_shipping_admin_order_meta($order){
                 $selected_option = get_post_meta( $order->id);
-                
+
                 if ($selected_option) {
                     echo '<p><strong>' . $this->title . ':</strong> ' . get_post_meta( $order->id, 'ecPay_shipping', true ) . '</p>';
                 }
             }
-            
+
             function add_wcso_shipping_methods( $methods ) {
-                $methods[] = $this; 
+                $methods[] = $this;
                 return $methods;
             }
-            
+
         }
-        
+
         new EcPay_Shipping_Options();
     }
 
 
-    add_action( 'wp_ajax_wcso_save_selected', 'save_selected' );  
+    add_action( 'wp_ajax_wcso_save_selected', 'save_selected' );
     add_action( 'wp_ajax_nopriv_wcso_save_selected', 'save_selected' );
-    
+
     function save_selected() {
         if ( isset( $_GET['shipping_option'] ) && !empty( $_GET['shipping_option'] ) ) {
             global $woocommerce;
@@ -950,7 +982,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
         die();
     }
 }
-    
+
     if (is_admin()) {
         add_action('plugins_loaded', 'EcPay_Shipping_Options_init');
         add_filter( 'woocommerce_admin_billing_fields', 'EcPay_custom_admin_billing_fields' );
@@ -961,19 +993,19 @@ if (!class_exists('EcPay_Shipping_Options')) {
     function EcPay_custom_admin_billing_fields($fields)
     {
         global $theorder;
-        
+
         $fields['purchaserStore'] = array(
             'label' => __( '門市名稱', 'purchaserStore' ),
             'value' => get_post_meta( $theorder->id, '_purchaserStore', true ),
             'show'  => true
         );
-      
+
         $fields['purchaserAddress'] = array(
             'label' => __( '門市地址', 'purchaserAddress' ),
             'value' => get_post_meta( $theorder->id, '_purchaserAddress', true ),
             'show'  => true
         );
-      
+
         $fields['purchaserPhone'] = array(
             'label' => __( '門市電話', 'purchaserPhone' ),
             'value' => get_post_meta( $theorder->id, '_purchaserPhone', true ),
@@ -987,7 +1019,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
         );
 
         return $fields;
-    }  
+    }
 
 
     function my_custom_checkout_field_save( $order_id )
@@ -997,18 +1029,18 @@ if (!class_exists('EcPay_Shipping_Options')) {
         $purchaserAddress = '_purchaserAddress';
         $purchaserPhone   = '_purchaserPhone'  ;
         $CVSStoreID       = '_CVSStoreID'      ;
-        // save custom field to order 
+        // save custom field to order
         if( !empty($_POST['purchaserStore']) && !empty($_POST['purchaserAddress']) ){
             update_post_meta( $order_id, $purchaserStore  , wc_clean( $_POST['purchaserStore'] ) );
             update_post_meta( $order_id, $purchaserAddress, wc_clean( $_POST['purchaserAddress'] ) );
             update_post_meta( $order_id, $purchaserPhone  , wc_clean( $_POST['purchaserPhone'] ) );
             update_post_meta( $order_id, $CVSStoreID  , wc_clean( $_POST['CVSStoreID'] ) );
-        }    
+        }
     }
 
     add_action('woocommerce_checkout_update_order_meta', 'my_custom_checkout_field_save' );
     add_action('plugins_loaded', 'ecpay_integration_plugin_init2', 0);
-    
+
     function ecpay_integration_plugin_init2() {
         # Make sure WooCommerce is setted.
         if (!class_exists('WC_Payment_Gateway')) {
@@ -1024,27 +1056,27 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $this->method_title = '綠界科技超商取貨付款';
                 $this->method_description = "若使用綠界科技超商取貨，請開啟此付款方式";
 
-                
+
                 $this->init_form_fields();
                 $this->init_settings();
                 $this->title = $this->get_option( 'title' );
 
                 $this->ecpay_payment_methods = $this->get_option('ecpay_payment_methods');
-                
+
                 # Register a action to save administrator settings
                 add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
-                
+
                 # Register a action to redirect to ecPay payment center
                 add_action( 'woocommerce_thankyou_cheque', array( $this, 'thankyou_page' ) );
-                
+
                 // Customer Emails
-                add_action( 'woocommerce_email_before_order_table', array( $this, 'email_instructions' ), 10, 3 ); 
-                               
+                add_action( 'woocommerce_email_before_order_table', array( $this, 'email_instructions' ), 10, 3 );
+
                 # Register a action to process the callback
                 add_action('woocommerce_api_wc_gateway_ecpay_logis', array($this, 'receive_response'));
 
             }
-            
+
             /**
              * Initialise Gateway Settings Form Fields
              */
@@ -1066,14 +1098,14 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 );
 
             }
-            
+
             /**
              * Check the payment method and the chosen payment
              */
             public function validate_fields() {
                 return true;
             }
-            
+
             /**
              * Process the payment
              */
@@ -1083,25 +1115,30 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $order->update_status( 'on-hold', '綠界科技超商取貨' );
                 $order->reduce_order_stock();
                 WC()->cart->empty_cart();
-               
+
                 return array(
                     'result'    => 'success',
                     'redirect'  => $this->get_return_url( $order )
                 );
             }
-            
+
             /**
              * Process the callback
              */
             public function receive_response() {
                 $response = $_REQUEST;
+                $response = $this->removeTestInfo($response);
 
-                //若為測試模式，拆除時間參數
-                $MerchantTradeNo = (($response['MerchantID']=='2000132')||($response['MerchantID']=='2000933'))? strrev(substr(strrev($response['MerchantTradeNo']),10)) : $response['MerchantTradeNo'];
+                if (isset($response['AllPayLogisticsID'])) {
+                    $this->storeLogisticMeta($response);
+                    return;
+                }
+
+                $MerchantTradeNo = $response['MerchantTradeNo'];
 
                 if(!empty($response['CVSStoreName']) && !empty($response['CVSAddress']))
                     $this->receive_changeStore_response($response);
-                
+
                 $order = wc_get_order( $MerchantTradeNo );
                 $order->add_order_note(print_r($response, true));
 
@@ -1130,7 +1167,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                             if ( (strpos($value,'/woocommerce-allpayinvoice.php') !== false))
                             {
                                 $invoice_active_allpay = 1;
-                            }           
+                            }
                         }
 
                         if($invoice_active_ecpay == 0 && $invoice_active_allpay == 1) // allpay
@@ -1165,16 +1202,42 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
             }
 
+            private function removeTestInfo(array $response)
+            {
+                 //若為測試模式，拆除時間參數
+                if ($this->isTestMode() || $response['MerchantID']=='2000132' ||
+                    $response['MerchantID']=='2000933') {
+                    $response['MerchantTradeNo'] = strrev(substr(strrev($response['MerchantTradeNo']), 10));
+                }
+                return $response;
+            }
+
+            private function isTestMode()
+            {
+                $option = get_option('woocommerce_ecpay_shipping_settings');
+                return (isset($option['testMode']) and 'yes' == $option['testMode']);
+            }
+
+            private function storeLogisticMeta(array $response)
+            {
+                $tradeNo = $response['MerchantTradeNo'];
+
+                $metaKeys = ['AllPayLogisticsID', 'CVSPaymentNo', 'CVSValidationNo'];
+                foreach ($metaKeys as $key) {
+                    update_post_meta($tradeNo, "_{$key}", $response[$key]);
+                }
+            }
+
             public function receive_changeStore_response($response = array())
             {
-                //若為測試模式，拆除時間參數
-                $MerchantTradeNo = (($response['MerchantID']=='2000132')||($response['MerchantID']=='2000933'))? strrev(substr(strrev($response['MerchantTradeNo']),10)) : $response['MerchantTradeNo'];
-                
+                $response = $this->removeTestInfo($response);
+                $MerchantTradeNo = $response['MerchantTradeNo'];
+
                 $order = wc_get_order( $MerchantTradeNo );
                 $order_status = $order->get_status();
 
                 $order->add_order_note("會員已更換門市", 0 ,false );
-                
+
                 //訂單更新門市訊息
                 update_post_meta($MerchantTradeNo, '_CVSStoreID', $response['CVSStoreID']);
                 update_post_meta($MerchantTradeNo, '_purchaserStore', $response['CVSStoreName']);
@@ -1191,7 +1254,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     window.close();
                     alert('門市已更換，請重新整理頁面');
                 //-->
-                </script> 
+                </script>
                 <?php
                 exit;
             }
@@ -1224,14 +1287,14 @@ if (!class_exists('EcPay_Shipping_Options')) {
     {
         $obj = new WC_Order($order->post->ID);
         $shipping = $obj->get_items('shipping');
-        
+
         $is_ecpayShipping = 'N';
         foreach ($shipping as $key => $value) {
             if($value['method_id'] == 'ecPay_shipping') $is_ecpayShipping = 'Y';
         }
-        
-        if ($is_ecpayShipping == 'N') return; 
-        
+
+        if ($is_ecpayShipping == 'N') return;
+
         $map = '';
         switch (get_post_meta( $order->id,'ecPay_shipping' ,true)) {
             case 'FAMI_Collection':
@@ -1244,16 +1307,16 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $LogisticsSubType = 'UNIMART';
                 break;
         }
-        
-        echo '門市代號: '; 
+
+        echo '門市代號: ';
         echo  (array_key_exists('_billing_CVSStoreID', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_CVSStoreID', true ) . '<br>' : get_post_meta( $order->id, '_CVSStoreID', true ) . '<br>';
         echo '門市名稱: ';
         echo  (array_key_exists('_billing_purchaserStore', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_purchaserStore', true ) . '<br>' : get_post_meta( $order->id, '_purchaserStore', true ) . '<br>';
-        echo '門市地址: '; 
+        echo '門市地址: ';
         echo  (array_key_exists('_billing_purchaserAddress', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_purchaserAddress', true ) . '<br>' : get_post_meta( $order->id, '_purchaserAddress', true ) . '<br>';
         echo '門市電話: ' ;
         echo  (array_key_exists('_billing_purchaserPhone', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_purchaserPhone', true ) . '<br>' : get_post_meta( $order->id, '_purchaserPhone', true ) . '<br>';
-            
+
         if(!is_checkout()) echo '<input type="button" id="changeStore" value="更換門市" >';
 
         ?>
@@ -1267,7 +1330,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
             <input type="hidden" id="Device" name="Device" value="0" /><br />
             <input type="hidden" id="LogisticsType" name="LogisticsType" value="CVS" /><br />
         </form>
-        
+
         <script type="text/javascript">
             document.getElementById("changeStore").onclick=function(){
                 map = window.open('','ecpay',config='height=790px,width=1020px');
