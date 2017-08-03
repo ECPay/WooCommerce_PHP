@@ -1103,6 +1103,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     $this->receive_changeStore_response($response);
                 
                 $order = wc_get_order( $MerchantTradeNo );
+                $order->add_order_note(print_r($response, true));
 
                 if($response['RtnCode'] == '300'){
                     $order->update_status( 'ecpay', "商品已出貨" );
