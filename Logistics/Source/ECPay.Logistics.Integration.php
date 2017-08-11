@@ -5,8 +5,7 @@
 	 * @author		https://www.ecpay.com.tw
 	 * @version		1.0.1012
 	 */
-  
-  
+
 	/**
 	 *  物流類型
 	 *
@@ -14,7 +13,7 @@
 	 * @category	Options
 	 * @version		1.0.1012
 	 */
-	abstract class LogisticsType {		
+	abstract class LogisticsType {
 		const CVS = 'CVS';// 超商取貨
 		const HOME = 'Home';// 宅配
 	}
@@ -100,7 +99,7 @@
 	}
 	
 	/**
-	 *  正式測試環境網址
+	 *  測試環境網址
 	 *
 	 * @author		https://www.ecpay.com.tw
 	 * @category	Options
@@ -649,6 +648,11 @@
 			
 			// 產生 CheckMacValue
 			$this->PostParams['CheckMacValue'] = ECPay_CheckMacValue::generate($this->PostParams, $this->HashKey, $this->HashIV);
+
+			// urlencode
+			foreach($this->PostParams as $key => $value) {
+            	$this->PostParams[$key] = urlencode($value);
+			}
 			
             // 解析回傳結果
             // 正確：1|MerchantID=XXX&MerchantTradeNo=XXX&RtnCode=XXX&RtnMsg=XXX&AllPayLogisticsID=XXX&LogisticsType=XXX&LogisticsSubType=XXX&GoodsAmount=XXX&UpdateStatusDate=XXX&ReceiverName=XXX&ReceiverPhone=XXX&ReceiverCellPhone=XXX&ReceiverEmail=XXX&ReceiverAddress=XXX&CVSPaymentNo=XXX&CVSValidationNo=XXX &CheckMacValue=XXX
@@ -1310,7 +1314,6 @@
             $this->ValidateHashIV();
 			$this->ValidateID('MerchantID', $this->PostParams['MerchantID'], 10);
 			$this->ServiceURL = $this->GetURL('PRINT_TRADE_DOC');
-			$this->ValidateID('AllPayLogisticsID', $this->PostParams['AllPayLogisticsID'], 20);
 			$this->ValidateID('PlatformID', $this->PostParams['PlatformID'], 10, true);
 			
 			// 產生 CheckMacValue
@@ -1606,7 +1609,7 @@
 				$this->IsAllowEmpty($Name, $AllowEmpty);
 			} else {
 				// 格式檢查
-				$this->IsValidFormat($Name, '/^\(?\d{2}\)?\-?(\d{6,8})(#\d{1,6}){0,1}$/', $Value);
+				$this->IsValidFormat($Name, '/^\(?\d{2}\)?\-?\d{2,6}\-?\d{2,6}(#\d{1,6}){0,1}$/', $Value);
 			}
 		}
 
@@ -2253,7 +2256,7 @@
 			$PostHTML = $this->AddNextLine('<div style="text-align:center;">');
 			$PostHTML .= $this->AddNextLine('  <form id="ECPayForm" method="POST" action="' . $this->ServiceURL . '" target="' . $Target . '">');
 			foreach ($this->PostParams as $Name => $Value) {
-				$PostHTML .= $this->AddNextLine('    <input type="hidden" id="'.$Name.'" name="' . $Name . '" value="' . $Value . '" />');
+				$PostHTML .= $this->AddNextLine('    <input type="hidden" id="' . $Name . '" name="' . $Name . '" value="' . $Value . '" />');
 			}
 			if (!empty($ButtonDesc)) {
 				// 手動
@@ -2320,6 +2323,7 @@
 				$sMacValue = '' ;
 
 				if(isset($arParameters)){
+					
 					unset($arParameters['CheckMacValue']);
 					uksort($arParameters, array('ECPay_CheckMacValue','merchantSort'));
 
@@ -2404,46 +2408,48 @@
 		}
 	}
 
-	class ECPay_IO
-	{
-		static function ServerPost($parameters ,$ServiceURL){
+    if (!class_exists('ECPay_IO', true)) {
+		class ECPay_IO
+		{
+			static function ServerPost($parameters ,$ServiceURL){
 
-		    $sSend_Info = '' ;
+			    $sSend_Info = '' ;
 
-		    // 組合字串
-			foreach($parameters as $key => $value)
-			{
-				if( $sSend_Info == '')
+			    // 組合字串
+				foreach($parameters as $key => $value)
 				{
-					$sSend_Info .= $key . '=' . $value ;
+					if( $sSend_Info == '')
+					{
+						$sSend_Info .= $key . '=' . $value ;
+					}
+					else
+					{
+						$sSend_Info .= '&' . $key . '=' . $value ;
+					}
 				}
-				else
-				{
-					$sSend_Info .= '&' . $key . '=' . $value ;
-				}
+
+			    $ch = curl_init();
+
+			    if (FALSE === $ch) {
+			        throw new Exception('curl failed to initialize');
+			    }
+			    
+			    curl_setopt($ch, CURLOPT_URL, $ServiceURL);
+			    curl_setopt($ch, CURLOPT_HEADER, FALSE);
+			    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+			    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
+			    curl_setopt($ch, CURLOPT_POST, TRUE);
+			    curl_setopt($ch, CURLOPT_POSTFIELDS, $sSend_Info);
+			    $rs = curl_exec($ch);
+
+			    if (FALSE === $rs) {
+			        throw new Exception(curl_error($ch), curl_errno($ch));
+			    }
+
+			    curl_close($ch);
+
+			    return $rs;
 			}
-
-		    $ch = curl_init();
-
-		    if (FALSE === $ch) {
-		        throw new Exception('curl failed to initialize');
-		    }
-		    
-		    curl_setopt($ch, CURLOPT_URL, $ServiceURL);
-		    curl_setopt($ch, CURLOPT_HEADER, FALSE);
-		    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-		    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, TRUE);
-		    curl_setopt($ch, CURLOPT_POST, TRUE);
-		    curl_setopt($ch, CURLOPT_POSTFIELDS, $sSend_Info);
-		    $rs = curl_exec($ch);
-
-		    if (FALSE === $rs) {
-		        throw new Exception(curl_error($ch), curl_errno($ch));
-		    }
-
-		    curl_close($ch);
-
-		    return $rs;
 		}
 	}
 ?>

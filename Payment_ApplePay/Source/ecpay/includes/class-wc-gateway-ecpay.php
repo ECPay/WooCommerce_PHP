@@ -195,7 +195,7 @@ class WC_Gateway_Ecpay extends WC_Payment_Gateway {
 					)
 				);
 				
-				$aio->Send['TradeDesc'] = 'ecpay_module_woocommerce_v1.0.10420';
+				$aio->Send['TradeDesc'] = 'ecpay_module_woocommerce_v1.1.0801';
 				
 				# Get the chosen payment and installment
 				$notes = $order->get_customer_order_notes();

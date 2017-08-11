@@ -1,26 +1,24 @@
 <?php
-    /**
-     * @copyright  Copyright (c) 2015 EcPay (http://www.ecpay.com.tw)
-     * @version 1.0.0106
-     *
-     * Plugin Name:  ecPay_shipping
-     * Plugin URI: https://www.ecpay.com.tw/
-     * Description: EcPay Shipping Integration Payment Gateway for WooCommerce
-     * Version: 1.0.0106
-     * Author: ECPay Green World FinTech Service Co., Ltd.
-     * Author URI: http://www.ecpay.com.tw
-     */
+/**
+ * @copyright Copyright (c) 2016 Green World FinTech Service Co., Ltd. (https://www.ecpay.com.tw)
+ * @version 1.1.0801
+ *
+ * Plugin Name: ECPay Shipping
+ * Plugin URI: https://www.ecpay.com.tw
+ * Description: ECPay Integration Shipping Gateway for WooCommerce
+ * Version: 1.1.0801
+ * Author: ECPay Green World FinTech Service Co., Ltd. 
+ * Author URI: https://www.ecpay.com.tw
+ */
+
 defined( 'ABSPATH' ) or exit;
 require_once(ABSPATH . 'wp-admin/includes/file.php');
-require_once 'ECPay.Logistics.Integration.php';
+require_once('ECPay.Logistics.Integration.php');
 
 
 if (!class_exists('EcPay_Shipping_Options')) {
-    
     function EcPay_Shipping_Options_init() {
-    
         class EcPay_Shipping_Options extends WC_Shipping_Method {
-      
             public $MerchantID;
             public $HashKey;
             public $HashIV;
@@ -109,10 +107,9 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $this->ecpaylogistic_max_amount = $this->get_option('ecpaylogistic_max_amount');
                 $this->orderStatus  = $this->get_option('ecpaylogistic_order_status'); 
                 $this->ecpaylogistic_free_shipping_amount = $this->get_option('ecpaylogistic_free_shipping_amount' );
-                //$this->cartAmount   = $woocommerce->cart->cart_contents_total ;
 
                 $this->get_shipping_options();
-                
+
                 add_filter('woocommerce_shipping_methods', array(&$this, 'add_wcso_shipping_methods'));
                 add_action('woocommerce_cart_totals_after_shipping', array(&$this, 'wcso_review_order_shipping_options'));
                 add_action('woocommerce_review_order_after_shipping', array(&$this, 'wcso_review_order_shipping_options'));
@@ -243,13 +240,14 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     );
                     
                     $AL->SendExtend = array(
-                        'ReceiverStoreID' => (array_key_exists('_billing_CVSStoreID', $orderInfo)) ? $orderInfo['_billing_CVSStoreID'][0] : $orderInfo['_CVSStoreID'][0],
-                        'ReturnStoreID'   => (array_key_exists('_billing_CVSStoreID', $orderInfo)) ? $orderInfo['_billing_CVSStoreID'][0] : $orderInfo['_CVSStoreID'][0]
+                        'ReceiverStoreID' => (array_key_exists('_shipping_CVSStoreID', $orderInfo)) ? $orderInfo['_shipping_CVSStoreID'][0] : $orderInfo['_CVSStoreID'][0],
+                        'ReturnStoreID'   => (array_key_exists('_shipping_CVSStoreID', $orderInfo)) ? $orderInfo['_shipping_CVSStoreID'][0] : $orderInfo['_CVSStoreID'][0]
                     );
 
                     //狀態為完成or已出貨，後台隱藏建立物流單按鈕                        
                     if($orderObj->post_status != 'wc-ecpay' && $orderObj->post_status != 'wc-completed') {
                         $html = $AL->CreateShippingOrder('物流訂單建立','Map');
+
                         echo "</form>".$html;
                         echo "<input class='button' type='button' value='建立物流訂單' onclick='create();'> ";
                     ?>
@@ -343,26 +341,6 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     $shipping_total = $fee ;
                 }
 
-/*
-                if ($this->type == 'fixed')
-                    $shipping_total = $this->fee;
-
-                if ($this->type == 'percent')
-                    $shipping_total = $package['contents_cost'] * ( $this->fee / 100 );
-
-                if ($this->type == 'product') {
-                    foreach ($package['contents'] as $item_id => $values) {
-                        $_product = $values['data'];
-
-                        if ($values['quantity'] > 0 && $_product->needs_shipping()) {
-                            $shipping_total += $this->fee * $values['quantity'];
-                        }
-                    }
-                }
-
-                $shipping_total = $fee ;
-*/
-
                 $rate = array(
                     'id' => $this->id,
                     'label' => $this->title,
@@ -393,18 +371,6 @@ if (!class_exists('EcPay_Shipping_Options')) {
                         'default' => '綠界科技超商取貨',
                         'desc_tip' => true,
                     ),
-                    // 'type' => array(
-                    //     'title' => __('Fee Type', 'woocommerce'),
-                    //     'type' => 'select',
-                    //     'description' => __('How to calculate delivery charges', 'woocommerce'),
-                    //     'default' => 'fixed',
-                    //     'options' => array(
-                    //         'fixed' => __('Fixed amount', 'woocommerce'),
-                    //         'percent' => __('Percentage of cart total', 'woocommerce'),
-                    //         'product' => __('Fixed amount per product', 'woocommerce'),
-                    //     ),
-                    //     'desc_tip' => true,
-                    // ),
                     'testMode' => array(
                         'title' => "測試模式",
                         'type' => 'checkbox',
@@ -463,7 +429,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     ),
 
                     'fee' => array(
-                        'title' => '運費',//__('Delivery Fee', 'woocommerce'),
+                        'title' => '運費',
                         'type' => 'price',
                         'description' => __('What fee do you want to charge for local delivery, disregarded if you choose free. Leave blank to disable.', 'woocommerce'),
                         'default' => '',
@@ -477,7 +443,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     ),
                     'shipping_options_table' => array(
                         'type' => 'shipping_options_table'
-                    )                
+                    )
                 );
             }
             
@@ -513,8 +479,10 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                 //if($total > 100) return false;
 
-                if ($this->enabled == "no")
+                $gateway_settings = get_option( 'woocommerce_ecpay_shipping_settings', '' );
+                if (empty( $gateway_settings['enabled'] ) || $gateway_settings['enabled'] === 'no' || $this->enabled == 'no') {
                     return false;
+                }
 
                 // If post codes are listed, let's use them.
                 $codes = '';
@@ -664,7 +632,8 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                     $chosen_method = $woocommerce->session->get('chosen_shipping_methods');
 
-                    if (is_array($chosen_method) && in_array($this->id, $chosen_method))
+                    $gateway_settings = get_option( 'woocommerce_ecpay_shipping_settings', '' );
+                    if (is_array($chosen_method) && in_array($this->id, $chosen_method) && !empty( $gateway_settings['enabled'] ) && $gateway_settings['enabled'] === 'yes')
                     {
                         if(is_checkout() && (($woocommerce->session->cart_contents_total >= $this->ecpaylogistic_min_amount) || ($woocommerce->session->cart_contents_total <= $this->ecpaylogistic_max_amount)))
                         {
@@ -675,7 +644,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                             $replyUrl = explode("?", $serverReplyUrl);
 
                             $subType = "";
-                            if ($this->category =="B2C") {
+                            if ($this->category == "B2C") {
                                 $shippingMethod = [
                                     'FAMI' => LogisticsSubType::FAMILY,
                                     'FAMI_Collection' => LogisticsSubType::FAMILY,
@@ -931,9 +900,8 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $methods[] = $this; 
                 return $methods;
             }
-            
         }
-        
+
         new EcPay_Shipping_Options();
     }
 
@@ -953,12 +921,12 @@ if (!class_exists('EcPay_Shipping_Options')) {
     
     if (is_admin()) {
         add_action('plugins_loaded', 'EcPay_Shipping_Options_init');
-        add_filter( 'woocommerce_admin_billing_fields', 'EcPay_custom_admin_billing_fields' );
+        add_filter('woocommerce_admin_shipping_fields', 'EcPay_custom_admin_shipping_fields' );
     } else {
         add_action('woocommerce_shipping_init', 'EcPay_Shipping_Options_init');
     }
 
-    function EcPay_custom_admin_billing_fields($fields)
+    function EcPay_custom_admin_shipping_fields($fields)
     {
         global $theorder;
         
@@ -993,10 +961,10 @@ if (!class_exists('EcPay_Shipping_Options')) {
     function my_custom_checkout_field_save( $order_id )
     {
         // custom field
-        $purchaserStore   = '_purchaserStore'  ;
-        $purchaserAddress = '_purchaserAddress';
-        $purchaserPhone   = '_purchaserPhone'  ;
-        $CVSStoreID       = '_CVSStoreID'      ;
+        $purchaserStore   = '_shipping_purchaserStore'  ;
+        $purchaserAddress = '_shipping_purchaserAddress';
+        $purchaserPhone   = '_shipping_purchaserPhone'  ;
+        $CVSStoreID       = '_shipping_CVSStoreID'      ;
         // save custom field to order 
         if( !empty($_POST['purchaserStore']) && !empty($_POST['purchaserAddress']) ){
             update_post_meta( $order_id, $purchaserStore  , wc_clean( $_POST['purchaserStore'] ) );
@@ -1105,7 +1073,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $order = wc_get_order( $MerchantTradeNo );
                 $order->add_order_note(print_r($response, true));
 
-                if($response['RtnCode'] == '300'){
+                if($response['RtnCode'] == '300' || $response['RtnCode'] == '2001'){
                     $order->update_status( 'ecpay', "商品已出貨" );
                 }
 
@@ -1130,7 +1098,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                             if ( (strpos($value,'/woocommerce-allpayinvoice.php') !== false))
                             {
                                 $invoice_active_allpay = 1;
-                            }           
+                            }
                         }
 
                         if($invoice_active_ecpay == 0 && $invoice_active_allpay == 1) // allpay
@@ -1176,14 +1144,10 @@ if (!class_exists('EcPay_Shipping_Options')) {
                 $order->add_order_note("會員已更換門市", 0 ,false );
                 
                 //訂單更新門市訊息
-                update_post_meta($MerchantTradeNo, '_CVSStoreID', $response['CVSStoreID']);
-                update_post_meta($MerchantTradeNo, '_purchaserStore', $response['CVSStoreName']);
-                update_post_meta($MerchantTradeNo, '_purchaserAddress', $response['CVSAddress']);
-                update_post_meta($MerchantTradeNo, '_purchaserPhone', $response['CVSTelephone']);
-                update_post_meta($MerchantTradeNo, '_billing_CVSStoreID', $response['CVSStoreID']);
-                update_post_meta($MerchantTradeNo, '_billing_purchaserStore', $response['CVSStoreName']);
-                update_post_meta($MerchantTradeNo, '_billing_purchaserAddress', $response['CVSAddress']);
-                update_post_meta($MerchantTradeNo, '_billing_purchaserPhone', $response['CVSTelephone']);
+                update_post_meta($MerchantTradeNo, '_shipping_CVSStoreID', $response['CVSStoreID']);
+                update_post_meta($MerchantTradeNo, '_shipping_purchaserStore', $response['CVSStoreName']);
+                update_post_meta($MerchantTradeNo, '_shipping_purchaserAddress', $response['CVSAddress']);
+                update_post_meta($MerchantTradeNo, '_shipping_purchaserPhone', $response['CVSTelephone']);
 
                 ?>
                 <script type="text/javascript">
@@ -1232,7 +1196,6 @@ if (!class_exists('EcPay_Shipping_Options')) {
         
         if ($is_ecpayShipping == 'N') return; 
         
-        $map = '';
         switch (get_post_meta( $order->id,'ecPay_shipping' ,true)) {
             case 'FAMI_Collection':
                 $LogisticsSubType = 'FAMI';
@@ -1246,13 +1209,13 @@ if (!class_exists('EcPay_Shipping_Options')) {
         }
         
         echo '門市代號: '; 
-        echo  (array_key_exists('_billing_CVSStoreID', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_CVSStoreID', true ) . '<br>' : get_post_meta( $order->id, '_CVSStoreID', true ) . '<br>';
+        echo  (array_key_exists('_shipping_CVSStoreID', get_post_meta($order->id))) ? get_post_meta( $order->id, '_shipping_CVSStoreID', true ) . '<br>' : get_post_meta( $order->id, '_CVSStoreID', true ) . '<br>';
         echo '門市名稱: ';
-        echo  (array_key_exists('_billing_purchaserStore', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_purchaserStore', true ) . '<br>' : get_post_meta( $order->id, '_purchaserStore', true ) . '<br>';
+        echo  (array_key_exists('_shipping_purchaserStore', get_post_meta($order->id))) ? get_post_meta( $order->id, '_shipping_purchaserStore', true ) . '<br>' : get_post_meta( $order->id, '_purchaserStore', true ) . '<br>';
         echo '門市地址: '; 
-        echo  (array_key_exists('_billing_purchaserAddress', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_purchaserAddress', true ) . '<br>' : get_post_meta( $order->id, '_purchaserAddress', true ) . '<br>';
+        echo  (array_key_exists('_shipping_purchaserAddress', get_post_meta($order->id))) ? get_post_meta( $order->id, '_shipping_purchaserAddress', true ) . '<br>' : get_post_meta( $order->id, '_purchaserAddress', true ) . '<br>';
         echo '門市電話: ' ;
-        echo  (array_key_exists('_billing_purchaserPhone', get_post_meta($order->id))) ? get_post_meta( $order->id, '_billing_purchaserPhone', true ) . '<br>' : get_post_meta( $order->id, '_purchaserPhone', true ) . '<br>';
+        echo  (array_key_exists('_shipping_purchaserPhone', get_post_meta($order->id))) ? get_post_meta( $order->id, '_shipping_purchaserPhone', true ) . '<br>' : get_post_meta( $order->id, '_purchaserPhone', true ) . '<br>';
             
         if(!is_checkout()) echo '<input type="button" id="changeStore" value="更換門市" >';
 

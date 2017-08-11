@@ -1,15 +1,14 @@
 <?php
 /**
- * @copyright  Copyright (c) 2015 ECPay (http://www.ecpay.com.tw)
- * @version 1.0.10222
- * @author Shawn.Chang
+ * @copyright Copyright (c) 2016 Green World FinTech Service Co., Ltd. (https://www.ecpay.com.tw)
+ * @version 1.1.0801
  *
- * Plugin Name:  ECPay
- * Plugin URI: https://www.ecpay.com.tw/
+ * Plugin Name: ECPay Payment
+ * Plugin URI: https://www.ecpay.com.tw
  * Description: ECPay Integration Payment Gateway for WooCommerce
- * Version: 1.0.10420
- * Author: ECPay Third-Party Payment Co., Ltd.
- * Author URI: http://www.ecpay.com.tw
+ * Version: 1.1.0801
+ * Author: ECPay Green World FinTech Service Co., Ltd. 
+ * Author URI: https://www.ecpay.com.tw
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -274,8 +273,8 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 				'HILIFE_Collection',
 			];
 
+			$paymentMethods = array();
 			if (!empty($_SESSION['ecpayShippingType'])) {
-				$paymentMethods = array();
 				if (in_array($_SESSION['ecpayShippingType'], $ecpayShippingType)) {
 					foreach ($paymentGateways as $key => $gateway) {
 						if ($gateway !== 'ecpay_shipping_pay') {
@@ -285,7 +284,11 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 				} else {
 					array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
 				}
-				
+			} else {
+				array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
+			}
+
+			if (is_array($paymentMethods)) {
 				$hide = ' style="display: none;"';
 				foreach ($paymentMethods as $key => $paymentMethod) {
 					$value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
