@@ -11,13 +11,13 @@
 
 
 ## 2. 安裝環境
-  - WooCommerce  2.6.0~2.6.14 / 3.1.0~3.1.1
+  - WooCommerce  2.6.0 ~ 2.6.14 / 3.1.0 ~ 3.1.1
   - WordPress 4.5.3 / 4.6.1 / 4.7.3 / 4.8.0
  
  
 
 ## 3. 教學文件
-  - 請參閱ECPay_APPLE_PAY金流外掛套件安裝導引(WooCommerce).pdf
+  - 請參閱ECPay_ApplePay_WooCommerce_v1.1.0801.pdf
 
 
 ## 4. 聯絡我們
