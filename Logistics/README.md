@@ -9,12 +9,8 @@
 
 
 ## 2. 適用版本
-  
-- Wordpress Version 4.5.2
-- Wordpress Version 4.4.3
-- Wordpress Version 4.3.4
-- WooCommerce Version 2.5.5
-- WooCommerce Version 2.4.13
+  - Wordpress Version 4.5.2 / 4.4.3 / 4.3.4 / 4.8.0
+  - WooCommerce Version 2.5.5 / 2.4.13 / 3.0.9 / 3.1.1
  
 
 ## 3. 安裝導引教學
