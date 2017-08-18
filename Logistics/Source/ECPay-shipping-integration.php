@@ -244,7 +244,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                         'GoodsAmount'          => (int)$totalPrice,
                         'CollectionAmount'     => (int)$totalPrice,
                         'IsCollection'         => $IsCollection,
-                        'GoodsName'            => implode('#', $items),
+                        'GoodsName'            => '網路商品一批',
                         'SenderName'           => $this->SenderName,
                         'SenderPhone'          => $this->SenderPhone,
                         'SenderCellPhone'      => $this->SenderCellPhone,
@@ -1310,4 +1310,44 @@ if (!class_exists('EcPay_Shipping_Options')) {
         </script>
         <?php
     }
+
+    add_filter('woocommerce_update_order_review_fragments', 'checkout_payment_method', 10, 1);
+    function checkout_payment_method($value)
+    {
+        $availableGateways = WC()->payment_gateways->get_available_payment_gateways();
+        if (is_array($availableGateways)) {
+            $paymentGateways = array_keys($availableGateways);
+        }
+
+        $ecpayShippingType = [
+            'FAMI_Collection',
+            'UNIMART_Collection' ,
+            'HILIFE_Collection',
+        ];
+
+        $paymentMethods = array();
+        if (!empty($_SESSION['ecpayShippingType'])) {
+            if (in_array($_SESSION['ecpayShippingType'], $ecpayShippingType)) {
+                foreach ($paymentGateways as $key => $gateway) {
+                    if ($gateway !== 'ecpay_shipping_pay') {
+                        array_push($paymentMethods, '<li class="wc_payment_method payment_method_' . $gateway . '">');
+                    }
+                }
+            } else {
+                array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
+            }
+        } else {
+            array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
+        }
+
+        if (is_array($paymentMethods)) {
+            $hide = ' style="display: none;"';
+            foreach ($paymentMethods as $key => $paymentMethod) {
+                $value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
+            }
+        }
+
+        return $value;
+    }
+
 ?>

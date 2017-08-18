@@ -406,16 +406,10 @@
 				if (empty($this->PostParams['ReceiverPhone']) and empty($this->PostParams['ReceiverCellPhone'])) {
 					throw new Exception('ReceiverPhone or ReceiverCellPhone is required when LogisticsType is Home.');
 				}
-			} else if (
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::UNIMART or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::FAMILY or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::HILIFE or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::UNIMART_C2C or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::HILIFE_C2C
-			) {
-				// 物流子類型(LogisticsSubType)為統一超商(UNIMART)、全家(FAMILY)、萊爾富(HILIFE)、統一超商交貨便(UNIMARTC2C)、萊爾富富店到店(HILIFEC2C)時，收件人手機(ReceiverCellPhone)不可為空
+			} else {
+				// 物流子類型(LogisticsSubType)為統一超商(UNIMART)、全家(FAMILY)、萊爾富(HILIFE)、統一超商交貨便(UNIMARTC2C)、全家超商店到店(FAMILYC2C)、萊爾富富店到店(HILIFEC2C)時，收件人手機(ReceiverCellPhone)不可為空
 				if (empty($this->PostParams['ReceiverCellPhone'])) {
-					throw new Exception('ReceiverCellPhone is required when LogisticsSubType is UNIMART, FAMILY, HILIFE, UNIMARTC2C or HILIFEC2C.');
+					throw new Exception('ReceiverCellPhone is required.');
 				}
 			}
 
@@ -602,16 +596,10 @@
 				if (empty($this->PostParams['ReceiverPhone']) and empty($this->PostParams['ReceiverCellPhone'])) {
 					throw new Exception('ReceiverPhone or ReceiverCellPhone is required when LogisticsType is Home.');
 				}
-			} else if (
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::UNIMART or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::FAMILY or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::HILIFE or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::UNIMART_C2C or
-				$this->PostParams['LogisticsSubType'] == LogisticsSubType::HILIFE_C2C
-			) {
-				// 物流子類型(LogisticsSubType)為統一超商(UNIMART)、全家(FAMILY)、萊爾富(HILIFE)、統一超商交貨便(UNIMARTC2C)、萊爾富富店到店(HILIFEC2C)時，收件人手機(ReceiverCellPhone)不可為空
+			} else {
+				// 物流子類型(LogisticsSubType)為統一超商(UNIMART)、全家(FAMILY)、萊爾富(HILIFE)、統一超商交貨便(UNIMARTC2C)、全家超商店到店(FAMILYC2C)、萊爾富富店到店(HILIFEC2C)時，收件人手機(ReceiverCellPhone)不可為空
 				if (empty($this->PostParams['ReceiverCellPhone'])) {
-					throw new Exception('ReceiverCellPhone is required when LogisticsSubType is UNIMART, FAMILY, HILIFE, UNIMARTC2C or HILIFEC2C.');
+					throw new Exception('ReceiverCellPhone is required.');
 				}
 			}
 			
