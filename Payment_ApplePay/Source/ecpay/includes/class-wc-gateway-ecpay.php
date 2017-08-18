@@ -510,14 +510,14 @@ class WC_Gateway_Ecpay extends WC_Payment_Gateway {
 		foreach($active_plugins as $key => $value)
 		{
 			if ( (strpos($value,'/woocommerce-ecpayinvoice.php') !== false))
-	                {
-	                        $invoice_active_ecpay = 1;
-	                }
+			{
+				$invoice_active_ecpay = 1;
+			}
 
-	                if ( (strpos($value,'/woocommerce-allpayinvoice.php') !== false))
-	                {
-	                        $invoice_active_allpay = 1;
-	                }			
+			if ( (strpos($value,'/woocommerce-allpayinvoice.php') !== false))
+			{
+				$invoice_active_allpay = 1;
+			}
 		}
 
 		if($invoice_active_ecpay == 0 && $invoice_active_allpay == 1)		// allpay
@@ -546,7 +546,6 @@ class WC_Gateway_Ecpay extends WC_Payment_Gateway {
 		}
 	}
 
-	
 }
 
 ?>

@@ -59,7 +59,6 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 			add_action( 'plugins_loaded', array( $this, 'init' ) );
 
 			add_action('wp_footer', array( $this, 'ecpay_integration_plugin_init_payment_method' ) ); 
-			add_filter('woocommerce_update_order_review_fragments', array( $this, 'checkout_payment_method' ), 10, 1);
 		}
 
 
@@ -260,48 +259,9 @@ if ( ! class_exists( 'WC_Ecpay_Payment' ) )
 			</script>
 			<?php
 		}
-
-		public function checkout_payment_method($value) {
-			$availableGateways = WC()->payment_gateways->get_available_payment_gateways();
-			if (is_array($availableGateways)) {
-				$paymentGateways = array_keys($availableGateways);
-			}
-
-			$ecpayShippingType = [
-				'FAMI_Collection',
-				'UNIMART_Collection' ,
-				'HILIFE_Collection',
-			];
-
-			$paymentMethods = array();
-			if (!empty($_SESSION['ecpayShippingType'])) {
-				if (in_array($_SESSION['ecpayShippingType'], $ecpayShippingType)) {
-					foreach ($paymentGateways as $key => $gateway) {
-						if ($gateway !== 'ecpay_shipping_pay') {
-							array_push($paymentMethods, '<li class="wc_payment_method payment_method_' . $gateway . '">');
-						}
-					}
-				} else {
-					array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
-				}
-			} else {
-				array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
-			}
-
-			if (is_array($paymentMethods)) {
-				$hide = ' style="display: none;"';
-				foreach ($paymentMethods as $key => $paymentMethod) {
-					$value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
-				}
-			}
-
-			return $value;
-		}
 	}
 
 	$GLOBALS['wc_ecpay_payment'] = WC_Ecpay_Payment::get_instance();
 }
-
-
 
 ?>
