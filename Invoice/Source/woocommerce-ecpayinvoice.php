@@ -3,7 +3,7 @@
  * @copyright Copyright (c) 2016 Green World FinTech Service Co., Ltd. (https://www.ecpay.com.tw)
  * @version 1.1.0801
  * 
- * Plugin Name: WooCommerce ECPay_Invoice
+ * Plugin Name: ECPay Invoice
  * Plugin URI: https://www.ecpay.com.tw
  * Description: ECPay Invoice For WooCommerce
  * Author: ECPay Green World FinTech Service Co., Ltd. 
@@ -750,7 +750,7 @@ class WC_ECPayinvoice {
 			}
 
 		}
-
+			
 	}
 
 
