@@ -564,16 +564,49 @@
 				$order->add_order_note($comments, true);
 				$order->payment_complete();
 
-				// call ecpay invoice model
+				// call invoice model
+				$invoice_active_ecpay = 0 ;
+				$invoice_active_allpay = 0 ;
 
-				$aConfig_Invoice = get_option('wc_ecpayinvoice_active_model') ;
+				$active_plugins = (array) get_option( 'active_plugins', array() );
 
-				if( is_file( plugin_dir_path( __DIR__ ).'/ecpay_invoice/woocommerce-ecpayinvoice.php') )
+				$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', array() ) );
+
+				foreach($active_plugins as $key => $value)
 				{
-
-					if(isset($aConfig_Invoice) && $aConfig_Invoice['wc_ecpay_invoice_enabled'] == 'enable' && $aConfig_Invoice['wc_ecpay_invoice_auto'] == 'auto' )
+					if ( (strpos($value,'/woocommerce-ecpayinvoice.php') !== false))
 					{
-						do_action('ecpay_auto_invoice', $order->id);
+						$invoice_active_ecpay = 1;
+					}
+
+					if ( (strpos($value,'/woocommerce-allpayinvoice.php') !== false))
+					{
+						$invoice_active_allpay = 1;
+					}
+				}
+
+				if($invoice_active_ecpay == 0 && $invoice_active_allpay == 1) // allpay
+				{
+					if( is_file( get_home_path().'/wp-content/plugins/allpay_invoice/woocommerce-allpayinvoice.php') )
+					{
+						$aConfig_Invoice = get_option('wc_allpayinvoice_active_model') ;
+
+						if(isset($aConfig_Invoice) && $aConfig_Invoice['wc_allpay_invoice_enabled'] == 'enable' && $aConfig_Invoice['wc_allpay_invoice_auto'] == 'auto' )
+						{
+							do_action('allpay_auto_invoice', $order->id, $ecpay_feedback['SimulatePaid']);
+						}
+					}
+				}
+				elseif($invoice_active_ecpay == 1 && $invoice_active_allpay == 0) //ecpay
+				{
+					if( is_file( get_home_path().'/wp-content/plugins/ecpay_invoice/woocommerce-ecpayinvoice.php') )
+					{
+						$aConfig_Invoice = get_option('wc_ecpayinvoice_active_model') ;
+
+						if(isset($aConfig_Invoice) && $aConfig_Invoice['wc_ecpay_invoice_enabled'] == 'enable' && $aConfig_Invoice['wc_ecpay_invoice_auto'] == 'auto' )
+						{
+							do_action('ecpay_auto_invoice', $order->id, $ecpay_feedback['SimulatePaid']);
+						}
 					}
 				}
 			}
@@ -681,45 +714,5 @@
 			}
 		</script>
 		<?php
-	}
-
-	add_filter('woocommerce_update_order_review_fragments', 'checkout_payment_method', 10, 1);
-
-	function checkout_payment_method($value)
-	{
-		$availableGateways = WC()->payment_gateways->get_available_payment_gateways();
-		if (is_array($availableGateways)) {
-			$paymentGateways = array_keys($availableGateways);
-		}
-
-		$ecpayShippingType = [
-			'FAMI_Collection',
-			'UNIMART_Collection' ,
-			'HILIFE_Collection',
-		];
-
-		$paymentMethods = array();
-		if (!empty($_SESSION['ecpayShippingType'])) {
-			if (in_array($_SESSION['ecpayShippingType'], $ecpayShippingType)) {
-				foreach ($paymentGateways as $key => $gateway) {
-					if ($gateway !== 'ecpay_shipping_pay') {
-						array_push($paymentMethods, '<li class="wc_payment_method payment_method_' . $gateway . '">');
-					}
-				}
-			} else {
-				array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
-			}
-		} else {
-			array_push($paymentMethods, '<li class="wc_payment_method payment_method_ecpay_shipping_pay">');
-		}
-
-		if (is_array($paymentMethods)) {
-			$hide = ' style="display: none;"';
-			foreach ($paymentMethods as $key => $paymentMethod) {
-				$value['.woocommerce-checkout-payment'] = substr_replace($value['.woocommerce-checkout-payment'], $hide, strpos($value['.woocommerce-checkout-payment'], $paymentMethod) + strlen($paymentMethod) - 1, 0);
-			}
-		}
-
-		return $value;
 	}
 ?>
