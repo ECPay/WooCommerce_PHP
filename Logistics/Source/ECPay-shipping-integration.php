@@ -736,6 +736,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                             ' . $options . '
                                         </select>
                                         '.$html.'
+                                        <p style="color: #ff0000;">使用綠界科技超商取貨，連絡電話請填寫手機號碼。</p>
                                     </td>
                                 </tr>
                             ';
