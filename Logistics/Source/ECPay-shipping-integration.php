@@ -639,7 +639,6 @@ if (!class_exists('EcPay_Shipping_Options')) {
              */
             function process_shipping_options()
             {
-                
                 $options = array();
                 foreach ($this->EcPay_Logistics[$this->category] as $key => $value) {
                     if(array_key_exists($key, $_POST)) $options[] = $key ;    
@@ -801,6 +800,11 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                         });
                                     }
 
+                                    document.getElementById('CVSStoreID').value = '';
+                                    document.getElementById('purchaserStore').value = '';
+                                    document.getElementById('purchaserAddress').value = '';
+                                    document.getElementById('purchaserPhone').value = '';
+
                                     if (
                                         shipping == "HILIFE_Collection" || 
                                         shipping == "FAMI_Collection" || 
@@ -809,34 +813,25 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                         var i;
                                        
                                         for (i = 0; i< payment.length; i++) {
-                                            if(payment[i].id != 'payment_method_ecpay_shipping_pay')
-                                            {
+                                            if (payment[i].id != 'payment_method_ecpay_shipping_pay') {
                                                 payment[i].style.display="none";
 
                                                 checkclass = document.getElementsByClassName("wc_payment_method "+payment[i].id).length;
 
-                                                if(checkclass == 0)
-                                                {
+                                                if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
                                                     x[0].style.display = "none";  
-                                                }
-                                                else
-                                                {
+                                                } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "none";
                                                 }
-                                            }
-                                            else
-                                            {
+                                            } else {
                                                 checkclass = document.getElementsByClassName("wc_payment_method "+payment[i].id).length;
 
-                                                if(checkclass == 0)
-                                                {
+                                                if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
                                                     x[0].style.display = "";  
-                                                }
-                                                else
-                                                {
+                                                } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "";
                                                 }
@@ -845,37 +840,28 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                         document.getElementById('payment_method_ecpay').checked = false;
                                         document.getElementById('payment_method_ecpay_shipping_pay').checked = true;
                                         document.getElementById('payment_method_ecpay_shipping_pay').style.display = '';
-                                    }else{
+                                    } else {
                                         var i;
                                         for (i = 0; i< payment.length; i++) {
-                                            if(payment[i].id != 'payment_method_ecpay_shipping_pay')
-                                            {
+                                            if (payment[i].id != 'payment_method_ecpay_shipping_pay') {
                                                 payment[i].style.display=""; 
 
                                                 checkclass = document.getElementsByClassName("wc_payment_method "+payment[i].id).length;
 
-                                                if(checkclass == 0)
-                                                {
+                                                if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
                                                     x[0].style.display = "";  
-                                                }
-                                                else
-                                                {
+                                                } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "";
                                                 }
-                                            } 
-                                            else
-                                            {
+                                            } else {
                                                 checkclass = document.getElementsByClassName("wc_payment_method "+payment[i].id).length;
 
-                                                if(checkclass == 0)
-                                                {
+                                                if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
                                                     x[0].style.display = "none";  
-                                                }
-                                                else
-                                                {
+                                                } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "none";
                                                 }
@@ -926,13 +912,18 @@ if (!class_exists('EcPay_Shipping_Options')) {
                     }
                 }
             }
-          
+
             function wcso_display_shipping_admin_order_meta($order)
             {
-                $selected_option = get_post_meta( $order->id);
+                $shippingMethod = $this->EcPay_Logistics[$this->category];
+                $ecpayShipping = get_post_meta($order->id, 'ecPay_shipping', true);
+
+                if (array_key_exists($ecpayShipping, $shippingMethod)) {
+                    $ecpayShippingMethod = $shippingMethod[$ecpayShipping];
+                }
                 
-                if ($selected_option) {
-                    echo '<p><strong>' . $this->title . ':</strong> ' . get_post_meta( $order->id, 'ecPay_shipping', true ) . '</p>';
+                if (get_post_meta($order->id)) {
+                    echo '<p class="form-field"><strong>' . $this->title . ':</strong> ' . $ecpayShippingMethod . '(' . $ecpayShipping . ')' . '</p>';
                 }
             }
             
@@ -974,25 +965,25 @@ if (!class_exists('EcPay_Shipping_Options')) {
         
         $fields['purchaserStore'] = array(
             'label' => __( '門市名稱', 'purchaserStore' ),
-            'value' => get_post_meta( $theorder->id, '_purchaserStore', true ),
+            'value' => get_post_meta( $theorder->id, '_shipping_purchaserStore', true ),
             'show'  => true
         );
       
         $fields['purchaserAddress'] = array(
             'label' => __( '門市地址', 'purchaserAddress' ),
-            'value' => get_post_meta( $theorder->id, '_purchaserAddress', true ),
+            'value' => get_post_meta( $theorder->id, '_shipping_purchaserAddress', true ),
             'show'  => true
         );
       
         $fields['purchaserPhone'] = array(
             'label' => __( '門市電話', 'purchaserPhone' ),
-            'value' => get_post_meta( $theorder->id, '_purchaserPhone', true ),
+            'value' => get_post_meta( $theorder->id, '_shipping_purchaserPhone', true ),
             'show'  => true
         );
 
         $fields['CVSStoreID'] = array(
             'label' => __( '門市代號', 'CVSStoreID' ),
-            'value' => get_post_meta( $theorder->id, '_CVSStoreID', true ),
+            'value' => get_post_meta( $theorder->id, '_shipping_CVSStoreID', true ),
             'show'  => true
         );
 
@@ -1002,18 +993,13 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
     function my_custom_checkout_field_save( $order_id )
     {
-        // custom field
-        $purchaserStore   = '_shipping_purchaserStore'  ;
-        $purchaserAddress = '_shipping_purchaserAddress';
-        $purchaserPhone   = '_shipping_purchaserPhone'  ;
-        $CVSStoreID       = '_shipping_CVSStoreID'      ;
         // save custom field to order 
         if( !empty($_POST['purchaserStore']) && !empty($_POST['purchaserAddress']) ){
-            update_post_meta( $order_id, $purchaserStore  , wc_clean( $_POST['purchaserStore'] ) );
-            update_post_meta( $order_id, $purchaserAddress, wc_clean( $_POST['purchaserAddress'] ) );
-            update_post_meta( $order_id, $purchaserPhone  , wc_clean( $_POST['purchaserPhone'] ) );
-            update_post_meta( $order_id, $CVSStoreID  , wc_clean( $_POST['CVSStoreID'] ) );
-        }    
+            update_post_meta( $order_id, '_shipping_purchaserStore'  , wc_clean( $_POST['purchaserStore'] ) );
+            update_post_meta( $order_id, '_shipping_purchaserAddress', wc_clean( $_POST['purchaserAddress'] ) );
+            update_post_meta( $order_id, '_shipping_purchaserPhone'  , wc_clean( $_POST['purchaserPhone'] ) );
+            update_post_meta( $order_id, '_shipping_CVSStoreID'  , wc_clean( $_POST['CVSStoreID'] ) );
+        }
     }
 
     add_action('woocommerce_checkout_update_order_meta', 'my_custom_checkout_field_save' );
@@ -1266,7 +1252,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
         
         if ($is_ecpayShipping == 'N') return; 
         
-        switch (get_post_meta( $order->id,'ecPay_shipping' ,true)) {
+        switch (get_post_meta( $order->id, 'ecPay_shipping' ,true)) {
             case 'FAMI_Collection':
                 $LogisticsSubType = 'FAMI';
                 break;
