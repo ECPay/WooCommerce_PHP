@@ -631,7 +631,7 @@ class ECPay_Send extends ECPay_Aio
         $szHtml .=         "<form id=\"__ecpayForm\" method=\"post\" target=\"{$target}\" action=\"{$ServiceURL}\">";
         
         foreach ($arParameters as $keys => $value) {
-            $szHtml .=         "<input type=\"hidden\" name=\"{$keys}\" value='{$value}' />";
+            $szHtml .=         "<input type=\"hidden\" name=\"{$keys}\" value=\"{$value}\" />";
         }
 
         $szHtml .=             "<input type=\"hidden\" name=\"CheckMacValue\" value=\"{$szCheckMacValue}\" />";
@@ -659,7 +659,7 @@ class ECPay_Send extends ECPay_Aio
         $szHtml .=         "<form id=\"__ecpayForm\" method=\"post\" target=\"{$target}\" action=\"{$ServiceURL}\">";
 
         foreach ($arParameters as $keys => $value) {
-            $szHtml .=         "<input type=\"hidden\" name=\"{$keys}\" value='{$value}' />";
+            $szHtml .=         "<input type=\"hidden\" name=\"{$keys}\" value=\"{$value}\" />";
         }
 
         $szHtml .=             "<input type=\"hidden\" name=\"CheckMacValue\" value=\"{$szCheckMacValue}\" />";
@@ -1289,7 +1289,7 @@ Abstract class ECPay_Verification
         }
 
         //備註 InvoiceRemark(UrlEncode, 預設為空字串)
-        if(!array_key_exists('InvoiceRemark', $arExtend)) $arExtend['InvoiceRemark'] = '';      
+        if(!array_key_exists('InvoiceRemark', $arExtend)) $arExtend['InvoiceRemark'] = '';
         
         // 延遲天數 DelayDay(不可為空, 預設為0) 延遲天數，範圍0~15，設定為0時，付款完成後立即開立發票
         if(!array_key_exists('DelayDay', $arExtend)) $arExtend['DelayDay'] = 0 ;
@@ -1519,13 +1519,13 @@ if(!class_exists('ECPay_CheckMacValue'))
                     $sMacValue .= '&' . $key . '=' . $value ;
                 }
                 
-                $sMacValue .= '&HashIV=' . $HashIV ;    
+                $sMacValue .= '&HashIV=' . $HashIV ;
                 
                 // URL Encode編碼     
-                $sMacValue = urlencode($sMacValue); 
+                $sMacValue = urlencode($sMacValue);
                 
                 // 轉成小寫
-                $sMacValue = strtolower($sMacValue);        
+                $sMacValue = strtolower($sMacValue);
                 
                 // 取代為與 dotNet 相符的字元
                 $sMacValue = str_replace('%2d', '-', $sMacValue);

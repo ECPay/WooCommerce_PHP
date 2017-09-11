@@ -16,168 +16,122 @@ msgstr ""
 "X-Poedit-KeywordsList: tran\n"
 "X-Poedit-SearchPath-0: ../integration_plugin.php\n"
 
-#: ../integration_plugin.php:41 ../integration_plugin.php:87
 msgid "ECPay"
 msgstr "綠界科技"
 
-#: ../integration_plugin.php:78
 msgid "Enable/Disable"
 msgstr "啟用/停用"
 
-#: ../integration_plugin.php:80 ../integration_plugin.php:96
 msgid "Enable"
 msgstr "啟用"
 
-#: ../integration_plugin.php:84
 msgid "Title"
 msgstr "標題"
 
-#: ../integration_plugin.php:86
 msgid "This controls the title which the user sees during checkout."
 msgstr "控制使用者在結帳時所看到的標題."
 
-#: ../integration_plugin.php:90
 msgid "Description"
 msgstr "說明"
 
-#: ../integration_plugin.php:92
 msgid "This controls the description which the user sees during checkout."
 msgstr "此項目控制使用者在結帳時會看到的說明."
 
-#: ../integration_plugin.php:95
 msgid "Test Mode"
 msgstr "測試模式"
 
-#: ../integration_plugin.php:98
 msgid "Test order will add date as prefix."
 msgstr "測試訂單將加上日期作為前綴"
 
-#: ../integration_plugin.php:102
 msgid "Merchant ID"
 msgstr "特店編號(Merchant ID)"
 
-#: ../integration_plugin.php:107
 msgid "Hash Key"
 msgstr "金鑰(Hash Key)"
 
-#: ../integration_plugin.php:112
 msgid "Hash IV"
 msgstr "向量(Hash IV)"
 
-#: ../integration_plugin.php:117 ../integration_plugin.php:158
 msgid "Payment Method"
 msgstr "付款方式"
 
-#: ../integration_plugin.php:119
 msgid "Press CTRL and the right button on the mouse to select multi payments."
 msgstr "按下 CTRL 與滑鼠右鍵以選擇多種付款方式"
 
-#: ../integration_plugin.php:143
 msgid "ECPay Integration Payments"
 msgstr "綠界科技整合金流"
 
-#: ../integration_plugin.php:144
 msgid ""
 "ECPay is the most popular payment gateway for online shopping in Taiwan"
 msgstr "綠界科技是台灣線上購物最熱門的整合金流"
 
-#: ../integration_plugin.php:178 ../integration_plugin.php:294
 msgid "Invalid payment method."
 msgstr "無效的付款方式."
 
-#: ../integration_plugin.php:189
 msgid "Awaiting ECPay payment"
 msgstr "等待綠界科技回應付款資訊"
 
-#: ../integration_plugin.php:341
-#, php-format
 msgid "Payment Method : %s<br />Trade Time : %s<br />"
 msgstr "付款方式 : %s<br />付款時間 : %s<br />"
 
-#: ../integration_plugin.php:350
-#, php-format
 msgid "Getting Code Result : (%s)%s"
 msgstr "取號結果 : (%s)%s"
 
-#: ../integration_plugin.php:357
-#, php-format
 msgid "Payment Result : (%s)%s"
 msgstr "付款結果 : (%s)%s"
 
-#: ../integration_plugin.php:431
-#, php-format
 msgid "Faild To Pay<br />Error : %s<br />"
 msgstr "付款失敗<br />錯誤訊息 : %s<br />"
 
-#: ../integration_plugin.php:461
 msgid "Credit"
 msgstr "信用卡(一次付清)"
 
-#: ../integration_plugin.php:462
 msgid "Credit(3 Installments)"
 msgstr "信用卡(3期)"
 
-#: ../integration_plugin.php:463
 msgid "Credit(6 Installments)"
 msgstr "信用卡(6期)"
 
-#: ../integration_plugin.php:464
 msgid "Credit(12 Installments)"
 msgstr "信用卡(12期)"
 
-#: ../integration_plugin.php:465
 msgid "Credit(18 Installments)"
 msgstr "信用卡(18期)"
 
-#: ../integration_plugin.php:466
 msgid "Credit(24 Installments)"
 msgstr "信用卡(24期)"
 
-#: ../integration_plugin.php:467
 msgid "WEB-ATM"
 msgstr "網路ATM"
 
-#: ../integration_plugin.php:468
 msgid "ATM"
 msgstr "ATM"
 
-#: ../integration_plugin.php:469
 msgid "CVS"
 msgstr "超商代碼"
 
-#: ../integration_plugin.php:470
 msgid "BARCODE"
 msgstr "超商條碼"
 
-#: ../integration_plugin.php:471
 msgid "Alipay"
 msgstr "支付寶"
 
-#: ../integration_plugin.php:472
 msgid "Tenpay"
 msgstr "財付通"
 
-#: ../integration_plugin.php:473
 msgid "TopUpUsed"
 msgstr "儲值/餘額消費"
 
-#: ../integration_plugin.php:494
 msgid "ECPay module missed."
 msgstr "綠界科技模組遺失."
 
-#: ../integration_plugin.php:550
-#, php-format
 msgid ""
 "Bank Code : %s<br />Virtual Account : %s<br />Payment Deadline : %s<br />"
 msgstr "銀行代碼 : %s<br />虛擬帳號 : %s<br />付款截止日 : %s<br />"
 
-#: ../integration_plugin.php:557
-#, php-format
 msgid "Trade Code : %s<br />Payment Deadline : %s<br />"
 msgstr "繳費代碼 : %s<br />付款截止日 : %s<br />"
 
-#: ../integration_plugin.php:563
-#, php-format
 msgid ""
 "Payment Deadline : %s<br />BARCODE 1 : %s<br />BARCODE 2 : %s<br />BARCODE "
 "3 : %s<br />"
@@ -185,29 +139,53 @@ msgstr ""
 "付款截止日 : %s<br />第1段條碼號碼 : %s<br />第2段條碼號碼 : %s<br />第3段條"
 "碼號碼 : %s<br />"
 
-#~ msgid "Payment Method : %s, Trade Time : %s, "
-#~ msgstr "付款方式 : %s, 交易時間 : %s, "
+msgid "ECPay Paid Automatically"
+msgstr "綠界科技定期定額"
 
-#~ msgid "Faild To Pay, Error : %s, "
-#~ msgstr "付款失敗, 錯誤 : %s, "
+msgid "Enable to use ECPay Paid Automatically"
+msgstr "若使用綠界科技定期定額，請開啟此付款方式"
 
-#~ msgid "Bank Code : %s, Virtual Account : %s, Payment Deadline : %s, "
-#~ msgstr "銀行代碼 : %s, 虛擬帳號 : %s, 付款截止日 : %s, "
+msgid "Enable ECPay Paid Automatically"
+msgstr "啟用綠界科技定期定額"
 
-#~ msgid "Trade Code : %s, Payment Deadline : %s, "
-#~ msgstr "繳費代碼 : %s, 付款截止日 : %s, "
+msgid "ECPay Paid Automatically Details"
+msgstr "定期定額方式"
 
-#~ msgid ""
-#~ "Payment Deadline : %s, BARCODE 1 : %s, BARCODE 2 : %s, BARCODE 3 : %s, "
-#~ msgstr ""
-#~ "付款截止日 : %s, 第1段條碼號碼 : %s, 第2段條碼號碼 : %s, 第3段條碼號碼 : "
-#~ "%s, "
+msgid "Peroid Type"
+msgstr "週期種類"
 
-#~ msgid "Payment Result : %s<br />Result Code : %s"
-#~ msgstr "付款結果 : %s<br />結果代碼 : %s"
+msgid "Frequency"
+msgstr "執行頻率"
 
-#~ msgid "ECPay module is missing."
-#~ msgstr "綠界科技模組遺失."
+msgid "Execute Times"
+msgstr "執行次數"
 
-#~ msgid "Press CTRL/SHIFT to select multi payment."
-#~ msgstr "按下 CTRL/SHIFT 並點選右鍵以選擇多個付款方式"
+msgid "add"
+msgstr "新增方式"
+
+msgid "remove"
+msgstr "刪除方式"
+
+msgid "Don\'t forget to save modify."
+msgstr "調整完成定期定額方式，請記得儲存修改."
+
+msgid "Invalid Peroid Type."
+msgstr "週期種類錯誤"
+
+msgid "Invalid Frequency."
+msgstr "執行頻率錯誤"
+
+msgid "Invalid Execute Times."
+msgstr "執行次數錯誤"
+
+msgid "year"
+msgstr "年"
+
+msgid "month"
+msgstr "月"
+
+msgid "day"
+msgstr "日"
+
+msgid "NT$ %d / %s %s, up to a maximun of %s"
+msgstr "NT$ %d / %s %s, 扣款上限 %s 次"
