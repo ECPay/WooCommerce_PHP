@@ -253,8 +253,8 @@ if (!class_exists('EcPay_Shipping_Options')) {
                         'ReceiverCellPhone'    => $orderInfo['_billing_phone'][0],
                         'ReceiverEmail'        => $orderInfo['_billing_email'][0],
                         'TradeDesc'            => '',
-                        'ServerReplyURL'       => add_query_arg('wc-api', 'WC_Gateway_Ecpay_Logis', home_url('/')),
-                        'LogisticsC2CReplyURL' => add_query_arg('wc-api', 'WC_Gateway_Ecpay_Logis', home_url('/')),
+                        'ServerReplyURL'       => str_replace( 'http:', (isset($_SERVER['HTTPS']) ? "https:" : "http:"), add_query_arg('wc-api', 'WC_Gateway_Ecpay_Logis', home_url('/')) ),
+                        'LogisticsC2CReplyURL' => str_replace( 'http:', (isset($_SERVER['HTTPS']) ? "https:" : "http:"), add_query_arg('wc-api', 'WC_Gateway_Ecpay_Logis', home_url('/')) ),
                         'Remark'               => $orderObj->customer_message,
                         'PlatformID'           => ''
                     );
@@ -727,7 +727,6 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                             echo '
                                 <input type="hidden" id="category" name="category" value='.$this->category.'>
-                                <input type="hidden" id="ecpayShippingType" name="ecpayShippingType" value="">
                                 <tr class="shipping_option">
                                     <th>' . $this->method_title . '</th>
                                     <td>
@@ -750,7 +749,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                 typeof document.getElementById("__paymentButton") !== "undefined"
                             ) {
                                 document.getElementById("__paymentButton").onclick = function() {
-                                    if (document.getElementById('shipping_option').value == "------") { 
+                                    if (document.getElementById('shipping_option').value == "------") {
                                         alert('請選擇物流方式'); return false;
                                     }
                                     
@@ -767,6 +766,13 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                     var shipping = e.options[e.selectedIndex].value;
                                     var category = document.getElementById('category').value;
                                     var payment = document.getElementsByName('payment_method');
+                                    var billingData = {
+                                        'first_name': document.getElementById('billing_first_name').value,
+                                        'last_name': document.getElementById('billing_last_name').value,
+                                        'company': document.getElementById('billing_company').value,
+                                        'phone': document.getElementById('billing_phone').value,
+                                        'email': document.getElementById('billing_email').value,
+                                    };
                                     var shippingMethod = {};
 
                                     if (category == 'C2C') {
@@ -790,11 +796,13 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                     }
                                     if (shipping in shippingMethod) {
                                         document.getElementById('LogisticsSubType').value = shippingMethod[shipping];
-                                        document.getElementById('ecpayShippingType').value = shipping;
                                         jQuery.ajax({
                                             url: "<?php echo Plugin_URL . '/ecpay_shipping/getSession.php'; ?>",
-                                            type: 'POST',
-                                            data: { ecpayShippingType: shipping },
+                                            data: {
+                                                ecpayShippingType: shipping,
+                                                billingData: billingData
+                                            },
+                                            dataType: 'json',
                                             success: function(data, textStatus, xhr) {},
                                             error: function(xhr, textStatus, errorThrown) {}
                                         });
@@ -820,7 +828,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                                                 if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "none";  
+                                                    x[0].style.display = "none";
                                                 } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "none";
@@ -830,7 +838,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                                                 if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "";  
+                                                    x[0].style.display = "";
                                                 } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "";
@@ -844,13 +852,13 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                         var i;
                                         for (i = 0; i< payment.length; i++) {
                                             if (payment[i].id != 'payment_method_ecpay_shipping_pay') {
-                                                payment[i].style.display=""; 
+                                                payment[i].style.display="";
 
                                                 checkclass = document.getElementsByClassName("wc_payment_method "+payment[i].id).length;
 
                                                 if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "";  
+                                                    x[0].style.display = "";
                                                 } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "";
@@ -860,7 +868,7 @@ if (!class_exists('EcPay_Shipping_Options')) {
 
                                                 if (checkclass == 0) {
                                                     var x = document.getElementsByClassName(payment[i].id);
-                                                    x[0].style.display = "none";  
+                                                    x[0].style.display = "none";
                                                 } else {
                                                     var x = document.getElementsByClassName("wc_payment_method "+payment[i].id);
                                                     x[0].style.display = "none";
@@ -884,6 +892,11 @@ if (!class_exists('EcPay_Shipping_Options')) {
                                     document.getElementById('purchaserStore').readOnly = true;
                                     document.getElementById('purchaserAddress').readOnly = true;
                                     document.getElementById('purchaserPhone').readOnly = true;
+                                    document.getElementById('billing_first_name').value = '<?php echo $_SESSION['billingData']['first_name']; ?>';
+                                    document.getElementById('billing_last_name').value = '<?php echo $_SESSION['billingData']['last_name']; ?>';
+                                    document.getElementById('billing_company').value = '<?php echo $_SESSION['billingData']['company']; ?>';
+                                    document.getElementById('billing_phone').value = '<?php echo $_SESSION['billingData']['phone']; ?>';
+                                    document.getElementById('billing_email').value = '<?php echo $_SESSION['billingData']['email']; ?>';
                                 }
                             })();
                         </script>
