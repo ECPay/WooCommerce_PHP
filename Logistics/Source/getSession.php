@@ -11,16 +11,19 @@
         'HILIFE_Collection',
     ];
 
-    $billingData = $_REQUEST['billingData'];
-
     $billing = [];
-    $billing['first_name'] = filter_var($billingData['first_name'], FILTER_SANITIZE_STRING);
-    $billing['last_name'] = filter_var($billingData['last_name'], FILTER_SANITIZE_STRING);
-    $billing['company'] = filter_var($billingData['company'], FILTER_SANITIZE_STRING);
-    $billing['phone'] = preg_match('/^09\d{8}$/', $billingData['phone']) ? $billingData['phone'] : '';
-    $billing['email'] = filter_var($billingData['email'], FILTER_VALIDATE_EMAIL) ? $billingData['email'] : '';
+    $billing['first_name'] = filter_var($_REQUEST['billingData']['first_name'], FILTER_SANITIZE_STRING);
+    $billing['last_name'] = filter_var($_REQUEST['billingData']['last_name'], FILTER_SANITIZE_STRING);
+    $billing['company'] = filter_var($_REQUEST['billingData']['company'], FILTER_SANITIZE_STRING);
+    $billing['phone'] = preg_match('/^09\d{8}$/', $_REQUEST['billingData']['phone']) ? $_REQUEST['billingData']['phone'] : '';
+    $billing['email'] = filter_var($_REQUEST['billingData']['email'], FILTER_VALIDATE_EMAIL) ? $_REQUEST['billingData']['email'] : '';
 
     if (!empty($_REQUEST['ecpayShippingType']) && in_array($_REQUEST['ecpayShippingType'], $ecpayShippingType)) {
-        $_SESSION['ecpayShippingType'] = $_REQUEST['ecpayShippingType'];
-        $_SESSION['billingData'] = $billing;
+        $domain = str_replace((isset($_SERVER['HTTPS']) ? "https://" : "http://"), '', $_SERVER['HTTP_HOST']);
+        $path = str_replace((isset($_SERVER['HTTPS']) ? "https://" : "http://") . $_SERVER['HTTP_HOST'], '', $_SERVER['HTTP_REFERER']);
+
+        setcookie('ecpayShippingType', htmlspecialchars($_REQUEST['ecpayShippingType'], ENT_QUOTES, 'UTF-8'), 0, $path, $domain, true, true);
+        foreach ($billing as $key => $value) {
+            setcookie('billing_' . $key, htmlspecialchars($value, ENT_QUOTES, 'UTF-8'), 0, $path, $domain, true, true);
+        }
     }
